@@ -1,0 +1,196 @@
+<!--
+
+    Copyright (c) 2017 Oracle and/or its affiliates. All rights reserved.
+
+    The Universal Permissive License (UPL), Version 1.0
+
+    Subject to the condition set forth below, permission is hereby granted to any
+    person obtaining a copy of this software, associated documentation and/or data
+    (collectively the "Software"), free of charge and under any and all copyright
+    rights in the Software, and any and all patent rights owned or freely
+    licensable by each licensor hereunder covering either (i) the unmodified
+    Software as contributed to or provided by such licensor, or (ii) the Larger
+    Works (as defined below), to deal in both
+
+    (a) the Software, and
+
+    (b) any piece of software and/or hardware listed in the lrgrwrks.txt file if
+    one is included with the Software each a "Larger Work" to which the Software
+    is contributed by such licensors),
+
+    without restriction, including without limitation the rights to copy, create
+    derivative works of, display, perform, and distribute the Software and make,
+    use, sell, offer for sale, import, export, have made, and have sold the
+    Software and the Larger Work(s), and to sublicense the foregoing rights on
+    either these or other terms.
+
+    This license is subject to the following condition:
+
+    The above copyright notice and either this complete permission notice or at a
+    minimum a reference to the UPL must be included in all copies or substantial
+    portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+-->
+<html>
+    <head>
+        <title>Java+Node.js Application</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body{
+                font-family: Dialog;
+                font-size: 13px;
+                width: 90%;
+                background-color: #eeeeee;
+            }
+
+            #locations{
+                display: table;
+            }       
+
+            .form-field{
+                display: table-row;
+            }
+
+            .form-field > label, .form-field > input, .form-field > button{
+                display: table-cell;
+            }
+
+            .error {
+                position: absolute;
+                color: red;
+                bottom: 2em;
+                margin-top: 16px;
+            }
+
+            label.checkbox-label input[type=checkbox]{
+                position: relative;
+                vertical-align: middle;
+                bottom: 2px;
+            }
+
+            input.choose {
+                width: 100%;
+            }
+
+            div.choose {
+                position: relative;
+                padding-right: .5em;
+            }
+
+            button.choose {
+                position: absolute;
+                right: 0px;
+            }
+
+            label.checkbox-label input[type=radio]{
+                position: relative;
+                vertical-align: middle;
+                bottom: 2px;
+            }
+        </style>
+        <link data-bind="attr: {href: laf}" href="#" rel="stylesheet" type="text/css"/>
+    </head>
+    <body id="body">
+        <div>
+            <section data-bind="step: { 'id' : 'graalvm', text : 'Select GraalVM JDK'}" >
+                <strong>Choose the GraalVM to run your application with:</strong>
+                <br><br><br>
+                <div class="choose">
+                    <input type="text" class="choose" id="jdkPath" data-bind="textInput: graalvmPath"/>
+                    <button class="choose" data-bind="click: chooseJDK">Choose Platform...</button>
+                </div>
+                <p>
+                Graal is a new just-in-time compiler for the JVM focused on peak
+                performance and multi-language support. Graal offers performance
+                advantages not only to Java code, but also to scripting languages
+                such as JavaScript, Ruby, and R. It contains
+                <code>bin/node</code> - a drop-in replacement for
+                node.js with Graal.js as the executing JavaScript engine.
+                </p>
+                Download from <a href="#" data-bind="click: download">Oracle Technology Network</a>
+            </section>
+            <section data-bind="step: 'targetChooser:archetype'">
+                <!-- where to generate the project -->
+            </section>
+            <section data-bind="step: { 'id' : 'samples', text : 'Choose Samples'}" >
+                <p>
+                    About to generate combined <b>node.js</b> and <b>Java</b>
+                    application: do you want some polyglot samples with that?
+                    Select few of them:
+                </p>
+                <div>
+                    <label class="checkbox-label">
+                        <input id="algJava" type="checkbox" data-bind="checked: algJava" />
+                        <label for="algJava">Java factorial with <code>BigInteger</code> running in a background thread</label>
+                </div>
+                <div>
+                    <label class="checkbox-label">
+                        <input id="algJS" type="checkbox" data-bind="checked: algJS"/>
+                        <label for="algJS">Simple JavaScript factorial invoked from Java</label>
+                </div>
+                <div>
+                    <label class="checkbox-label">
+                        <input id="algRuby" type="checkbox" data-bind="checked: algRuby"/>
+                        <label for="algRuby">Precise factorial implementation written in Ruby</label>
+                </div>
+                <div>
+                    <label class="checkbox-label">
+                        <input id="algR" type="checkbox" data-bind="checked: algR"/>
+                        <label for="algR">Using R language factorial function</label>
+                </div>
+                <p>
+                    There is a support for polyglot unit testing in the archetype.
+                    Maven surefire plugin is configured to launch the <b>JUnit</b> tests in
+                    <b>node.js</b> environment which allows access to all languages
+                    and node features.
+                </p>
+                <div>
+                    <label class="checkbox-label">
+                        <input id="unitTesting" type="checkbox" data-bind="checked: unitTesting"/>
+                        <label for="unitTesting">Enable Java in node.js unit testing</label>
+                </div>
+            </section>
+
+
+            <section data-bind="step: { 'id' : 'summary', text : 'What will be created?' }" >
+                <p>
+                    Let's generate a project from following archetype:
+                </p>
+                <ul>
+                    <li><b>artifactId</b>: <span>nodejs-archetype</span></li>
+                    <li><b>groupId</b>: <span>com.oracle.graal-js</span></li>
+                    <li><b>version</b>: <span>1.0-SNAPSHOT</span></li>
+                </ul>
+                <p>
+                    You can execute or debug the generated program. Place
+                    breakpoints anywhere you want and just connect to specified
+                    port (<code>8080</code>). Use following command on a command line:
+                </p>
+                <pre>curl http://localhost:8080/some/parameters</pre>
+                <p data-bind="visible: anySample">
+                    A sample code snippet(s) that compute a factorial in
+                    selected language(s) have been generated for you. Each
+                    of them shows power of different languages. Use them
+                    as an inspiration.
+                </p>
+            </section>
+        </div>
+        <!-- display the error message -->
+        <div data-bind="visible: errorCode() === 1" class="error">
+            Missing GraalVM! <code><span data-bind="text: graalvmPath"></span>/bin/node</code> doesn't exist.
+        </div>
+        <div data-bind="visible: errorCode() === 2" class="error">
+            Please, fill in the input field!
+        </div>
+
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "${artifactId} node.js",
+  "version": "${version}",
+  "keywords": [
+    "util",
+    "functional",
+    "server",
+    "java"
+  ],
+  "contributors": [],
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}
