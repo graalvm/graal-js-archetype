@@ -160,6 +160,24 @@
                 </div>
             </section>
 
+            <section data-bind="step: { 'id' : 'server', text : 'Server in Java or JavaScript?'}" >
+                <p>
+                    The archetype creates simple <b>HTTP</b> server. Do you want the
+                    server code to be written in <b>JavaScript</b> (more classical)
+                    or do you want it to be written in <b>Java</b> (shows how to 
+                    access <em>node.js APIs</em> from Java):
+                </p>
+                <div>
+                    <label class="checkbox-label">
+                        <input id="serverInJavaScript" type="radio" value="js" data-bind="checked: serverCode" />
+                        <label for="serverInJavaScript">Server is written in JavaScript (classical)</label>
+                </div>
+                <div>
+                    <label class="checkbox-label">
+                        <input id="serverInJava" type="radio" value="java" data-bind="checked: serverCode" />
+                        <label for="serverInJava">Server is written in Java (shows interop)</label>
+                </div>
+            </section>
 
             <section data-bind="step: { 'id' : 'summary', text : 'What will be created?' }" >
                 <p>

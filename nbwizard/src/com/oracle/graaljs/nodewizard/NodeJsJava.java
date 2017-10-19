@@ -40,6 +40,7 @@
 
 package com.oracle.graaljs.nodewizard;
 
+import com.oracle.graaljs.nodewizard.NodeJsJava.ServerCode;
 import java.awt.EventQueue;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -66,6 +67,7 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "current", type = String.class),
     @Property(name = "ok", type = boolean.class),
     @Property(name = "msg", type = String.class),
+    @Property(name = "serverCode", type = ServerCode.class),
     @Property(name = "algJava", type = boolean.class),
     @Property(name = "algJS", type = boolean.class),
     @Property(name = "algRuby", type = boolean.class),
@@ -90,6 +92,7 @@ public class NodeJsJava {
         NodeJsJavaModel data = new NodeJsJavaModel();
         findGraalVM(data);
         data.setUnitTesting(true);
+        data.setServerCode(ServerCode.js);
         return data;
     }
 
@@ -229,5 +232,9 @@ public class NodeJsJava {
             }
             os.write(arr, 0, len);
         }
+    }
+
+    enum ServerCode {
+        js, java
     }
 }
