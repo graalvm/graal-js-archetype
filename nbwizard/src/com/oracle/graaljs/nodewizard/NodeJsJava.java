@@ -48,11 +48,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 import net.java.html.json.ComputedProperty;
 import net.java.html.json.Function;
 import net.java.html.json.Model;
+import net.java.html.json.OnPropertyChange;
 import net.java.html.json.Property;
 import org.netbeans.api.java.platform.JavaPlatform;
 import org.netbeans.api.java.platform.JavaPlatformManager;
@@ -74,9 +79,11 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "algR", type = boolean.class),
     @Property(name = "unitTesting", type = boolean.class),
     @Property(name = "graalvmPath", type = String.class),
+    @Property(name = "graalvmCheck", type = String.class),
     @Property(name = "laf", type = String.class)
 })
 public class NodeJsJava {
+    private ScheduledExecutorService background;
 
     @TemplateRegistration(
             position = 133,
@@ -105,6 +112,7 @@ public class NodeJsJava {
             }
         }
     }
+    private ScheduledFuture<?> graalVMCheck;
 
 
     @Function
@@ -128,11 +136,71 @@ public class NodeJsJava {
     }
 
     @ComputedProperty
-    static int errorCode(String graalvmPath) {
+    static int errorCode(String graalvmPath, String graalvmCheck) {
         if (graalvmPath == null || !new File(new File(new File(graalvmPath), "bin"), "node").exists()) {
             return 1;
         }
+        if ("pending".equals(graalvmCheck)) {
+            return 4;
+        }
+        if (!"function".equals(graalvmCheck)) {
+            return 3;
+        }
         return 0;
+    }
+
+    @OnPropertyChange("graalvmPath")
+    void checkGraalVM(NodeJsJavaModel model) {
+        model.setGraalvmCheck("pending");
+        ScheduledFuture<?> previous = graalVMCheck;
+        if (previous != null) {
+            previous.cancel(true);
+        }
+        graalVMCheck = background().schedule(() -> {
+            String status;
+            try {
+                status = testGraalVMVersion(model.getGraalvmPath());
+            } catch (IOException | InterruptedException ex) {
+                status = ex.getMessage();
+            }
+            model.setGraalvmCheck(status);
+        }, 1, TimeUnit.SECONDS);
+    }
+
+    private ScheduledExecutorService background() {
+        if (background == null) {
+            background = Executors.newSingleThreadScheduledExecutor();
+        }
+        return background;
+    }
+
+    static String testGraalVMVersion(String path) throws IOException, InterruptedException {
+        File nodeFile = new File(new File(new File(path), "bin"), "node");
+        if (!nodeFile.isFile()) {
+            return nodeFile + " not found";
+        }
+        ProcessBuilder b = new ProcessBuilder(
+            nodeFile.getPath(),
+            "--polyglot",
+            "--use-classpath-env-var",
+            "--jvm",
+            "-e",
+            "print(typeof Java === 'object' && typeof Java.Worker);"
+        );
+        b.redirectErrorStream(true);
+        Process p = b.start();
+        InputStream is = p.getInputStream();
+        byte[] arr = new byte[128];
+        StringBuilder sb = new StringBuilder();
+        for (;;) {
+            int len = is.read(arr);
+            if (len == -1) {
+                break;
+            }
+            sb.append(new String(arr, 0, len, "UTF-8"));
+            p.waitFor(100, TimeUnit.MILLISECONDS);
+        }
+        return sb.toString().trim();
     }
 
     @ComputedProperty
