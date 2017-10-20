@@ -54,7 +54,7 @@
 
             #locations{
                 display: table;
-            }       
+            }
 
             .form-field{
                 display: table-row;
@@ -97,9 +97,9 @@
                 bottom: 2px;
             }
         </style>
-        <link data-bind="attr: {href: laf}" href="#" rel="stylesheet" type="text/css"/>
     </head>
     <body id="body">
+        <link data-bind="attr: {href: laf}" href="#" rel="stylesheet" type="text/css"/>
         <div>
             <section data-bind="step: { 'id' : 'graalvm', text : 'Select GraalVM JDK'}" >
                 <strong>Choose the GraalVM to run your application with:</strong>
@@ -164,7 +164,7 @@
                 <p>
                     The archetype creates simple <b>HTTP</b> server. Do you want the
                     server code to be written in <b>JavaScript</b> (more classical)
-                    or do you want it to be written in <b>Java</b> (shows how to 
+                    or do you want it to be written in <b>Java</b> (shows how to
                     access <em>node.js APIs</em> from Java):
                 </p>
                 <div>
@@ -179,7 +179,7 @@
                         <label for="serverInJava">Server is written in Java (shows interop)</label>
                     </label>
                 </div>
-                
+
                 <div data-bind="visible: serverCode() === 'js'">
                     <p>
                     The <code>http.createServer</code> call is made in the
@@ -211,7 +211,7 @@
                         the algorithms when handling <em>HTTP</em> requests.
                     </p>
                 </div>
-                
+
             </section>
 
             <section data-bind="step: { 'id' : 'summary', text : 'What will be created?' }" >
