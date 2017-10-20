@@ -171,12 +171,47 @@
                     <label class="checkbox-label">
                         <input id="serverInJavaScript" type="radio" value="js" data-bind="checked: serverCode" />
                         <label for="serverInJavaScript">Server is written in JavaScript (classical)</label>
+                    </label>
                 </div>
                 <div>
                     <label class="checkbox-label">
                         <input id="serverInJava" type="radio" value="java" data-bind="checked: serverCode" />
                         <label for="serverInJava">Server is written in Java (shows interop)</label>
+                    </label>
                 </div>
+                
+                <div data-bind="visible: serverCode() === 'js'">
+                    <p>
+                    The <code>http.createServer</code> call is made in the
+                    <code>launcher.js</code> - which is a typical way <em>node.js</em>
+                    is supposed to start an <em>HTTP</em> server.
+                    </p>
+                    <p>
+                        The <code>launcher.js</code> also contains an <code>algorithms</code>
+                        object which holds factorial algorithms implemented
+                        in different languages. The server then calls into
+                        the algorithms when handling <em>HTTP</em> requests.
+                    </p>
+                </div>
+
+                <div data-bind="visible: serverCode() === 'java'">
+                    <p>
+                    The <code>http.createServer</code> call is made in the
+                    <code>Services.java</code> class. That demonstrates the
+                    <b>Java</b>/<b>JavaScript</b> <em>inter-operability</em>.
+                    The <code>Services</code> class defines bunch of Java
+                    <b>interfaces</b> that provide a <em>type-safe</em> way
+                    of accessing <em>node.js</em> API from <b>Java</b>.
+                    </p>
+                    <p>
+                        There is an inner class
+                        <code>AlgorithmsImpl</code> that holds
+                        the factorial algorithms implemented
+                        in different languages. The server then calls into
+                        the algorithms when handling <em>HTTP</em> requests.
+                    </p>
+                </div>
+                
             </section>
 
             <section data-bind="step: { 'id' : 'summary', text : 'What will be created?' }" >
