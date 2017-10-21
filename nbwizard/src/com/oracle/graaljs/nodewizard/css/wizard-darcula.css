@@ -16,6 +16,15 @@ input[type=radio],input[type=checkbox], button{
     border: solid 1px #646464;
 }
 
+a {
+    color: #589df6;
+}
+
+.error {
+    color: #ff6666;
+}
+
+
 button{
     border-style: solid;
     border-color: #646464;
