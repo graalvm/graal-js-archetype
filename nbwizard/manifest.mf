@@ -5,7 +5,7 @@ OpenIDE-Module-Localizing-Bundle: com/oracle/graaljs/nodewizard/Bundle.propertie
 OpenIDE-Module-Requires: 
   cnb.org.netbeans.modules.maven.kit,
   cnb.org.netbeans.modules.java.kit,
-  cnb.org.netbeans.modules.web.client.kit,
   org.netbeans.api.templates.wizard
+OpenIDE-Module-Recommends: cnb.org.netbeans.modules.web.client.kit
 OpenIDE-Module-Specification-Version: 1.0
 
