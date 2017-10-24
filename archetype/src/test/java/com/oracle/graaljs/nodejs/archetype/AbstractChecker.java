@@ -42,7 +42,6 @@ package com.oracle.graaljs.nodejs.archetype;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
@@ -56,7 +55,6 @@ import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -64,8 +62,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.maven.it.VerificationException;
 import org.apache.maven.it.Verifier;
 import static org.junit.Assert.assertEquals;
@@ -76,6 +78,14 @@ import static org.junit.Assert.fail;
 import org.junit.Test;
 
 public abstract class AbstractChecker {
+    private static final Logger CONSOLE;
+    static {
+        CONSOLE = Logger.getLogger(AbstractChecker.class.getName());
+        final ConsoleHandler handler = new ConsoleHandler();
+        CONSOLE.addHandler(handler);
+        handler.setLevel(Level.FINE);
+        CONSOLE.setLevel(Level.FINE);
+    }
     protected abstract String serverCode();
 
     private Verifier createAndExec(
@@ -120,16 +130,11 @@ public abstract class AbstractChecker {
         assertTrue("nbactions.xml created", nbactions.isFile());
         port[0] = assignFreePort(projectDir);
 
-        Verifier mvnProject = new Verifier(projectDir.getPath());
+        Verifier mvnProject = new Maven(projectDir.getPath());
         Executors.newSingleThreadExecutor().submit(() -> {
             try {
-                mvnProject.executeGoal("package");
+                mvnProject.executeGoals(Arrays.asList("package", "exec:exec"));
                 mvnProject.verifyErrorFreeLog();
-                try {
-                    mvnProject.executeGoals(Arrays.asList("package", "exec:exec"));
-                } catch (VerificationException ignoredForNow) {
-                    error[1] = ignoredForNow;
-                }
             } catch (VerificationException ex) {
                 error[0] = ex;
             } finally {
@@ -435,5 +440,23 @@ public abstract class AbstractChecker {
             return (IOException) new ConnectException(sb.toString()).initCause(cause);
         }
         return new IOException(sb.toString(), cause);
+    }
+
+    private class Maven extends Verifier {
+        Maven(String basedir) throws VerificationException {
+            super(basedir);
+        }
+
+        @Override
+        public void executeGoals(List<String> goals, Map<String, String> envVars) throws VerificationException {
+            CONSOLE.log(Level.INFO, "executing {0} at {1}", new Object[]{goals, getBasedir()});
+            try {
+                super.executeGoals(goals, envVars);
+            } catch (VerificationException ex) {
+                CONSOLE.log(Level.SEVERE, "failed " + ex.getMessage(), ex);
+                throw ex;
+            }
+            CONSOLE.log(Level.INFO, "OK");
+        }
     }
 }
