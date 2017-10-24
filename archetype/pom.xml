@@ -87,6 +87,7 @@
                                 <archetype>SCRIPT_STYLE</archetype>
                             </mapping>
                             <excludes>
+                                <exclude>.*/**</exclude>
                                 <exclude>**/src/main/resources/archetype-resources/**</exclude>
                                 <exclude>nbwizard/**/private/**</exclude>
                                 <exclude>nbwizard/build/**</exclude>
