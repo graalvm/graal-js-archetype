@@ -336,15 +336,18 @@ public abstract class AbstractChecker {
         while (failures++ < 500) {
             URL u = new URL("http", addresses[failures % addresses.length], port, file);
             log.append("Attempt ").append(failures).append(". Connecting to ").append(u).append("\n");
+            CONSOLE.log(Level.INFO, "Attempt {0}. Connecting to {1}", new Object[]{failures, u});
             try (BufferedReader b = openReader(u)) {
                 StringBuilder sb = new StringBuilder();
                 for (;;) {
                     String line = b.readLine();
                     if (line == null) {
                         if (subString && sb.toString().contains(msg)) {
+                            CONSOLE.log(Level.INFO, "substring {0} found", msg);
                             return;
                         }
                         assertEquals(msg, sb.toString());
+                        CONSOLE.log(Level.INFO, "message {0} obtained", msg);
                         return;
                     }
                     sb.append(line).append("\n");
@@ -361,6 +364,7 @@ public abstract class AbstractChecker {
         if (last != null) {
             throw dumpLogFile(log, prj, last);
         }
+        CONSOLE.log(Level.SEVERE, "time out accessing {0}", msg);
         fail("time out accessing " + msg);
     }
 
