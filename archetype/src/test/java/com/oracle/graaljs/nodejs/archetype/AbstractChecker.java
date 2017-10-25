@@ -89,7 +89,7 @@ public abstract class AbstractChecker {
     protected abstract String serverCode();
 
     private Verifier createAndExec(
-        String projectName, CountDownLatch cdl, VerificationException[] error,
+        String projectName, CountDownLatch cdl, Exception[] error,
         int[] port,
         boolean java, boolean js, boolean ruby, boolean r, boolean unitTest
     ) throws IOException, VerificationException {
@@ -128,18 +128,36 @@ public abstract class AbstractChecker {
         assertTrue("pom.xml created", pom.isFile());
         File nbactions = new File(projectDir, "nbactions.xml");
         assertTrue("nbactions.xml created", nbactions.isFile());
-        port[0] = assignFreePort(projectDir);
 
         Verifier mvnProject = new Maven(projectDir.getPath());
         Executors.newSingleThreadExecutor().submit(() -> {
-            try {
-                mvnProject.executeGoals(Arrays.asList("package", "exec:exec"));
-                mvnProject.verifyErrorFreeLog();
-            } catch (VerificationException ex) {
-                error[0] = ex;
-            } finally {
-                cdl.countDown();
-            }
+            boolean again;
+            int retries = 10;
+            do {
+                again = false;
+                try {
+                    assignFreePort(projectDir, port);
+                    mvnProject.executeGoals(Arrays.asList("package", "exec:exec"));
+                    mvnProject.verifyErrorFreeLog();
+                } catch (VerificationException ex) {
+                    if (ex.getMessage().contains("listen EADDRINUSE")) {
+                        again = retries-- > 0;
+                        CONSOLE.log(Level.WARNING, "Port {0} is in use. Trying again: {1}", new Object[]{port[0], again});
+                    }
+                    if (!again) {
+                        error[0] = ex;
+                    }
+                } catch (IOException ex) {
+                    error[0] = ex;
+                } finally {
+                    if (!again) {
+                        if (error[0] == null) {
+                            CONSOLE.log(Level.INFO, "node.js server started on {0}", port[0]);
+                        }
+                        cdl.countDown();
+                    }
+                }
+            } while (again);
         });
         return mvnProject;
     }
@@ -366,8 +384,13 @@ public abstract class AbstractChecker {
     }
 
 
-    private static int assignFreePort(File projectDir) throws IOException {
-        int[] freePort = { -1 };
+    private static void assignFreePort(File projectDir, int[] freePort) throws IOException {
+        int originalPort = freePort[0];
+        if (originalPort < 1024) {
+            // port 8080 is the initial one
+            freePort[0] = 8080;
+            return;
+        }
         Files.walkFileTree(projectDir.toPath(), new FileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
@@ -376,11 +399,11 @@ public abstract class AbstractChecker {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (freePort[0] >= 0) {
+                if (freePort[0] != originalPort) {
                     return FileVisitResult.SKIP_SIBLINGS;
                 }
                 String text = new String(Files.readAllBytes(file), "UTF-8");
-                final String portDefinition = "PORT = 8080";
+                final String portDefinition = "PORT = " + originalPort;
                 int port = text.indexOf(portDefinition);
                 if (port == -1) {
                     return FileVisitResult.CONTINUE;
@@ -388,8 +411,9 @@ public abstract class AbstractChecker {
                 int free;
                 try (ServerSocket ss = new ServerSocket(0)) {
                     free = ss.getLocalPort();
-                    assertTrue("Free port found: " + free, free > 1024);
+                    assertTrue("Free port found: " + free, free >= 1024);
                 }
+                CONSOLE.log(Level.INFO, "Trying to use port {0} for {1}", new Object[] { free, projectDir.getName() });
 
                 String newText = text.substring(0, port + 7) + free + text.substring(port + portDefinition.length());
                 try (BufferedWriter w = Files.newBufferedWriter(file, StandardOpenOption.WRITE)) {
@@ -409,8 +433,7 @@ public abstract class AbstractChecker {
                 return FileVisitResult.CONTINUE;
             }
         });
-        assertNotEquals("Proper port shall be allocated", -1, freePort[0]);
-        return freePort[0];
+        assertNotEquals("Proper port shall be allocated", originalPort, freePort[0]);
     }
 
     private static String[] findAddresses() throws SocketException {
