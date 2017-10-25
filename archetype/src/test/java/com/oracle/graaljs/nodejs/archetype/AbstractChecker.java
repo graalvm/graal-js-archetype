@@ -68,6 +68,8 @@ import java.util.concurrent.Executors;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.maven.it.VerificationException;
 import org.apache.maven.it.Verifier;
 import static org.junit.Assert.assertEquals;
@@ -172,11 +174,11 @@ public abstract class AbstractChecker {
 
         Verifier mvnProject = createAndExec("allArchetypes", cdl, error, prefix, true, true, true, true, true);
 
-        assertUrl(prefix[0], "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/java/5", "120\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/js/6", "720\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/ruby/4", "24\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/r/10", "3628800", true, cdl, mvnProject);
+        assertUrl(prefix, "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
+        assertUrl(prefix, "/java/5", "120\n", cdl, mvnProject);
+        assertUrl(prefix, "/js/6", "720\n", cdl, mvnProject);
+        assertUrl(prefix, "/ruby/4", "24\n", cdl, mvnProject);
+        assertUrl(prefix, "/r/10", "3628800", true, cdl, mvnProject);
 
         assertQuit(cdl, error, prefix, mvnProject);
     }
@@ -192,11 +194,11 @@ public abstract class AbstractChecker {
         File pom = new File(mvnProject.getBasedir(), "pom.xml");
         assertNoText("surefire", pom);
 
-        assertUrl(prefix[0], "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/java/5", "120\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/js/6", "720\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/ruby/4", "24\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/r/10", "3628800", true, cdl, mvnProject);
+        assertUrl(prefix, "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
+        assertUrl(prefix, "/java/5", "120\n", cdl, mvnProject);
+        assertUrl(prefix, "/js/6", "720\n", cdl, mvnProject);
+        assertUrl(prefix, "/ruby/4", "24\n", cdl, mvnProject);
+        assertUrl(prefix, "/r/10", "3628800", true, cdl, mvnProject);
 
         File launcher = new File(new File(new File(new File(new File(mvnProject.getBasedir()), "src"), "main"), "js"), "launcher.js");
         assertNoText("process.env.CLASSPATH", launcher);
@@ -217,11 +219,11 @@ public abstract class AbstractChecker {
         assignNoTextInServices("Algorithm ruby()", mvnProject);
         assignNoTextInServices("Algorithm r()", mvnProject);
 
-        assertUrl(prefix[0], "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/java/5", "120\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/js/6", "Received: /js/6\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/ruby/4", "Received: /ruby/4\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/r/10", "Received: /r/10\n", cdl, mvnProject);
+        assertUrl(prefix, "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
+        assertUrl(prefix, "/java/5", "120\n", cdl, mvnProject);
+        assertUrl(prefix, "/js/6", "Received: /js/6\n", cdl, mvnProject);
+        assertUrl(prefix, "/ruby/4", "Received: /ruby/4\n", cdl, mvnProject);
+        assertUrl(prefix, "/r/10", "Received: /r/10\n", cdl, mvnProject);
 
         assertQuit(cdl, error, prefix, mvnProject);
     }
@@ -238,11 +240,11 @@ public abstract class AbstractChecker {
         assignNoTextInServices("Algorithm ruby", mvnProject);
         assignNoTextInServices("Algorithm r", mvnProject);
 
-        assertUrl(prefix[0], "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/java/5", "Received: /java/5\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/js/6", "720\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/ruby/4", "Received: /ruby/4\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/r/10", "Received: /r/10\n", cdl, mvnProject);
+        assertUrl(prefix, "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
+        assertUrl(prefix, "/java/5", "Received: /java/5\n", cdl, mvnProject);
+        assertUrl(prefix, "/js/6", "720\n", cdl, mvnProject);
+        assertUrl(prefix, "/ruby/4", "Received: /ruby/4\n", cdl, mvnProject);
+        assertUrl(prefix, "/r/10", "Received: /r/10\n", cdl, mvnProject);
         assertQuit(cdl, error, prefix, mvnProject);
     }
 
@@ -258,11 +260,11 @@ public abstract class AbstractChecker {
         assignNoTextInServices("Algorithm js()", mvnProject);
         assignNoTextInServices("Algorithm r()", mvnProject);
 
-        assertUrl(prefix[0], "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/java/5", "Received: /java/5\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/js/6", "Received: /js/6\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/ruby/4", "24\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/r/10", "Received: /r/10\n", cdl, mvnProject);
+        assertUrl(prefix, "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
+        assertUrl(prefix, "/java/5", "Received: /java/5\n", cdl, mvnProject);
+        assertUrl(prefix, "/js/6", "Received: /js/6\n", cdl, mvnProject);
+        assertUrl(prefix, "/ruby/4", "24\n", cdl, mvnProject);
+        assertUrl(prefix, "/r/10", "Received: /r/10\n", cdl, mvnProject);
 
         assertQuit(cdl, error, prefix, mvnProject);
     }
@@ -279,11 +281,11 @@ public abstract class AbstractChecker {
         assignNoTextInServices("Algorithm js", mvnProject);
         assignNoTextInServices("Algorithm ruby", mvnProject);
 
-        assertUrl(prefix[0], "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/java/5", "Received: /java/5\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/js/6", "Received: /js/6\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/ruby/4", "Received: /ruby/4\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/r/10", "3628800", true, cdl, mvnProject);
+        assertUrl(prefix, "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
+        assertUrl(prefix, "/java/5", "Received: /java/5\n", cdl, mvnProject);
+        assertUrl(prefix, "/js/6", "Received: /js/6\n", cdl, mvnProject);
+        assertUrl(prefix, "/ruby/4", "Received: /ruby/4\n", cdl, mvnProject);
+        assertUrl(prefix, "/r/10", "3628800", true, cdl, mvnProject);
 
         assertQuit(cdl, error, prefix, mvnProject);
     }
@@ -304,18 +306,18 @@ public abstract class AbstractChecker {
         assignNoTextInServices("Algorithm ruby", mvnProject);
         assignNoTextInServices("Algorithm r", mvnProject);
 
-        assertUrl(prefix[0], "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/java/5", "Received: /java/5\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/js/6", "Received: /js/6\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/ruby/4", "Received: /ruby/4\n", cdl, mvnProject);
-        assertUrl(prefix[0], "/r/10", "Received: /r/10\n", cdl, mvnProject);
+        assertUrl(prefix, "/HelloMaven!", "Received: /HelloMaven!\n", cdl, mvnProject);
+        assertUrl(prefix, "/java/5", "Received: /java/5\n", cdl, mvnProject);
+        assertUrl(prefix, "/js/6", "Received: /js/6\n", cdl, mvnProject);
+        assertUrl(prefix, "/ruby/4", "Received: /ruby/4\n", cdl, mvnProject);
+        assertUrl(prefix, "/r/10", "Received: /r/10\n", cdl, mvnProject);
 
         assertQuit(cdl, error, prefix, mvnProject);
     }
 
     private static void assertQuit(CountDownLatch cdl, VerificationException[] error, int[] prefix, Verifier mvnProject)
     throws IOException, VerificationException, InterruptedException {
-        assertUrl(prefix[0], "/quit", "Quiting...\n", cdl, mvnProject);
+        assertUrl(prefix, "/quit", "Quiting...\n", cdl, mvnProject);
         cdl.await();
         if (error[0] != null) {
             throw error[0];
@@ -325,16 +327,22 @@ public abstract class AbstractChecker {
         mvnProject.verifyTextInLog("Listening on http://localhost:" + prefix[0]);
     }
 
-    private static void assertUrl(int port, String file, String msg, CountDownLatch waitFor, Verifier prj) throws IOException, InterruptedException {
+    private static void assertUrl(int[] port, String file, String msg, CountDownLatch waitFor, Verifier prj) throws IOException, InterruptedException {
         assertUrl(port, file, msg, false, waitFor, prj);
     }
-    private static void assertUrl(int port, String file, String msg, boolean subString, CountDownLatch waitFor, Verifier prj) throws IOException, InterruptedException {
+    private static void assertUrl(int[] port, String file, String msg, boolean subString, CountDownLatch waitFor, Verifier prj) throws IOException, InterruptedException {
         IOException last = null;
         int failures = 0;
+        int previousPort = port[0];
         String[] addresses = findAddresses();
         StringBuilder log = new StringBuilder();
         while (failures++ < 500) {
-            URL u = new URL("http", addresses[failures % addresses.length], port, file);
+            if (previousPort != port[0]) {
+                CONSOLE.log(Level.INFO, "Port changed from {0} to {1}. Resetting connections.", new Object[]{previousPort, port[0]});
+                previousPort = port[0];
+                failures = 0;
+            }
+            URL u = new URL("http", addresses[failures % addresses.length], port[0], file);
             log.append("Attempt ").append(failures).append(". Connecting to ").append(u).append("\n");
             CONSOLE.log(Level.INFO, "Attempt {0}. Connecting to {1}", new Object[]{failures, u});
             try (BufferedReader b = openReader(u)) {
@@ -387,14 +395,9 @@ public abstract class AbstractChecker {
         assertNoText(txt, java);
     }
 
-
+    private static final Pattern PORT = Pattern.compile("PORT *= *([0-9]+)");
     private static void assignFreePort(File projectDir, int[] freePort) throws IOException {
-        int originalPort = freePort[0];
-        if (originalPort < 1024) {
-            // port 8080 is the initial one
-            freePort[0] = 8080;
-            return;
-        }
+        freePort[0] = -1;
         Files.walkFileTree(projectDir.toPath(), new FileVisitor<Path>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
@@ -403,15 +406,16 @@ public abstract class AbstractChecker {
 
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (freePort[0] != originalPort) {
+                if (freePort[0] != -1) {
                     return FileVisitResult.SKIP_SIBLINGS;
                 }
                 String text = new String(Files.readAllBytes(file), "UTF-8");
-                final String portDefinition = "PORT = " + originalPort;
-                int port = text.indexOf(portDefinition);
-                if (port == -1) {
+                Matcher m = PORT.matcher(text);
+                if (!m.find()) {
                     return FileVisitResult.CONTINUE;
                 }
+                assert Integer.parseInt(m.group(1)) >= 0;
+
                 int free;
                 try (ServerSocket ss = new ServerSocket(0)) {
                     free = ss.getLocalPort();
@@ -419,11 +423,14 @@ public abstract class AbstractChecker {
                 }
                 CONSOLE.log(Level.INFO, "Trying to use port {0} for {1}", new Object[] { free, projectDir.getName() });
 
-                String newText = text.substring(0, port + 7) + free + text.substring(port + portDefinition.length());
+                int begin = m.start(1);
+                int end = m.end(1);
+                String newText = text.substring(0, begin) + free + text.substring(end);
                 try (BufferedWriter w = Files.newBufferedWriter(file, StandardOpenOption.WRITE)) {
                     w.write(newText);
                 }
                 freePort[0] = free;
+                CONSOLE.log(Level.INFO, "Port is assigned to {0}", free);
                 return FileVisitResult.SKIP_SIBLINGS;
             }
 
@@ -437,7 +444,7 @@ public abstract class AbstractChecker {
                 return FileVisitResult.CONTINUE;
             }
         });
-        assertNotEquals("Proper port shall be allocated", originalPort, freePort[0]);
+        assertNotEquals("Proper port shall be allocated", -1, freePort[0]);
     }
 
     private static String[] findAddresses() throws SocketException {
