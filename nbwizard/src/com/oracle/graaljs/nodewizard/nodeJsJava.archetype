@@ -42,4 +42,4 @@ archetypeArtifactId=nodejs-archetype
 archetypeGroupId=com.oracle.graal-js
 archetypeVersion=1.0-SNAPSHOT
 archetypeBuild=true
-archetypeOpen=.*/Services.java,.*/launcher.js
+archetypeOpen=.*/Services.java,.*/launcher.js,src/main/js
