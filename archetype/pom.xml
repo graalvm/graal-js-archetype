@@ -159,6 +159,7 @@
                     <mavenExecutorId>forked-path</mavenExecutorId>
                     <tag>release-${releaseVersion}</tag>
                     <developmentVersion>1.0-SNAPSHOT</developmentVersion>
+                    <pushChanges>false</pushChanges>
                 </configuration>
             </plugin>
         </plugins>
