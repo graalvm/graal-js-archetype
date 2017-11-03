@@ -63,4 +63,22 @@
             <arg value="package"/>
         </exec>
     </target>
+
+    <target name="build-uc" depends="nbm">
+        <property environment="env"/>
+        <property name="catalog.base.url" value="${env.BUILD_URL}"/>
+        <pathfileset id="updater.jar">
+            <path refid="cluster.path.id"/>
+            <filename name="modules/ext/updater.jar"/>
+        </pathfileset>
+        <makeupdatedesc desc="build/updates.xml" distbase="${catalog.base.url}" automaticgrouping="true" uselicenseurl="${use.license.url.in.catalog}">
+            <fileset dir="build">
+                <include name="*.nbm"/>
+                <include name="*.jar"/> <!-- #181025: bare OSGi bundles -->
+            </fileset>
+            <updaterjar>
+                <resources refid="updater.jar"/>
+            </updaterjar>
+        </makeupdatedesc>
+    </target>
 </project>
