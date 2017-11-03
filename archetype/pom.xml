@@ -61,6 +61,12 @@
             <name>UPL</name>
         </license>
     </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/graalvm/graal-js-archetype.git</connection>
+        <developerConnection>scm:git:https://github.com/graalvm/graal-js-archetype.git</developerConnection>
+        <url>https://github.com/graalvm/graal-js-archetype/tree/${project.scm.tag}</url>
+        <tag>master</tag>
+    </scm>
     <build>
         <plugins>
             <plugin>
