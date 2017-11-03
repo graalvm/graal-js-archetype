@@ -42,12 +42,16 @@ package com.oracle.graaljs.nodewizard;
 
 import com.oracle.graaljs.nodewizard.NodeJsJava.ServerCode;
 import java.awt.EventQueue;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -85,6 +89,7 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "laf", type = String.class)
 })
 public class NodeJsJava {
+    private static final String ARCH_JAR_NAME = "nodejs-archetype.jar";
     private ScheduledExecutorService background;
 
     @TemplateRegistration(
@@ -250,7 +255,13 @@ public class NodeJsJava {
         if (!m2Repo.isDirectory()) {
             return false;
         }
-        final String version = "1.0-SNAPSHOT";
+        final String version;
+        try {
+            version = findArchetypeVersion();
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+            return false;
+        }
         final String baseName = "nodejs-archetype-" + version;
         final String jarName = baseName + ".jar";
         File archetype = new File(new File(new File(new File(new File(
@@ -263,7 +274,7 @@ public class NodeJsJava {
         if (!archetype.getParentFile().mkdirs()) {
             return false;
         }
-        InputStream is = NodeJsJavaModel.class.getResourceAsStream(jarName);
+        InputStream is = NodeJsJavaModel.class.getResourceAsStream(ARCH_JAR_NAME);
         if (is == null) {
             return false;
         }
@@ -274,7 +285,7 @@ public class NodeJsJava {
             Exceptions.printStackTrace(ex);
         }
         try (
-            JarInputStream jar = new JarInputStream(NodeJsJavaModel.class.getResourceAsStream(jarName));
+            JarInputStream jar = new JarInputStream(NodeJsJavaModel.class.getResourceAsStream(ARCH_JAR_NAME));
             FileOutputStream os = new FileOutputStream(pom)
         ) {
             for (;;) {
@@ -294,7 +305,27 @@ public class NodeJsJava {
         return archetype.isFile() && pom.isFile();
     }
 
-    private static void copyStreams(InputStream is, final FileOutputStream os) throws IOException {
+    static String findArchetypeVersion() throws IOException {
+        try (
+            JarInputStream jar = new JarInputStream(NodeJsJavaModel.class.getResourceAsStream(ARCH_JAR_NAME));
+        ) {
+            for (;;) {
+                ZipEntry entry = jar.getNextEntry();
+                if (entry == null) {
+                    break;
+                }
+                if (entry.getName().endsWith("pom.properties")) {
+                    Properties p = new Properties();
+                    p.load(jar);
+                    return p.getProperty("version");
+                }
+                jar.closeEntry();
+            }
+            throw new FileNotFoundException("pom.properties not found");
+        }
+    }
+
+    private static void copyStreams(InputStream is, final OutputStream os) throws IOException {
         byte[] arr = new byte[4096];
         for (;;) {
             int len = is.read(arr);

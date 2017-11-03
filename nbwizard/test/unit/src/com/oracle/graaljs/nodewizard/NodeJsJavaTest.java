@@ -73,6 +73,11 @@ public class NodeJsJavaTest extends NbTestCase {
         assertOneFile(home, ".pom");
     }
 
+    public void testCanReadArchetypeVersion() throws Exception {
+        String version = NodeJsJava.findArchetypeVersion();
+        assertNotNull("Finds some version", version);
+    }
+
     public void testRunningOnModernGraalVM() throws Exception {
         File jreHome = new File(System.getProperty("java.home"));
         assertTrue("Directory: " + jreHome, jreHome.isDirectory());

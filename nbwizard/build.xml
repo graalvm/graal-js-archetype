@@ -50,15 +50,29 @@
 
     <property name="archetype.dir" location="../archetype"/>
 
-    <property name="archetype.file" location="${archetype.dir}/target/nodejs-archetype-1.0-SNAPSHOT.jar"/>
-    <available file="${archetype.file}" property="archetype.available" value="true"/>
+    <property name="archetype.file.target" location="build/classes/com/oracle/graaljs/nodewizard/nodejs-archetype.jar"/>
 
-    <target name="files-init" depends="projectized-common.files-init, build-maven">
-        <copy file="${archetype.file}" todir="build/classes/com/oracle/graaljs/nodewizard/"/>
+    <target name="clean" depends="projectized-common.clean">
+        <exec dir="${archetype.dir}" executable="mvn">
+            <arg value="clean"/>
+        </exec>
+        <echo message="Maven project ${archetype.dir} has been cleaned"/>
     </target>
 
-    <target name="build-maven" depends="projectized-common.files-init" unless="archetype.available">
-        <exec dir="${archetype.dir}" command="mvn">
+    <target name="compile" depends="projectized-common.compile, build-maven">
+        <copy tofile="${archetype.file.target}">
+            <fileset dir="${archetype.dir}/target">
+                <filename name="nodejs-archetype-*.jar"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="-archetype-file-check">
+        <available file="${archetype.file.target}" property="archetype.available" value="true"/>
+    </target>
+
+    <target name="build-maven" depends="projectized-common.files-init, -archetype-file-check" unless="archetype.available">
+        <exec dir="${archetype.dir}" executable="mvn">
             <arg value="-Dmaven.test.skip=true"/>
             <arg value="package"/>
         </exec>
