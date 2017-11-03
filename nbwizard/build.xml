@@ -80,7 +80,7 @@
 
     <target name="build-uc" depends="nbm">
         <property environment="env"/>
-        <property name="catalog.base.url" value="${env.BUILD_URL}"/>
+        <property name="catalog.base.url" value="${env.BUILD_URL}/artifact/nbwizard/build/"/>
         <pathfileset id="updater.jar">
             <path refid="cluster.path.id"/>
             <filename name="modules/ext/updater.jar"/>
