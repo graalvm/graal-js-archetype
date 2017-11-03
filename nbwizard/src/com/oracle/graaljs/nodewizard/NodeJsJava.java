@@ -42,7 +42,6 @@ package com.oracle.graaljs.nodewizard;
 
 import com.oracle.graaljs.nodewizard.NodeJsJava.ServerCode;
 import java.awt.EventQueue;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -86,6 +85,7 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "unitTesting", type = boolean.class),
     @Property(name = "graalvmPath", type = String.class),
     @Property(name = "graalvmCheck", type = String.class),
+    @Property(name = "archetypeVersion", type = String.class),
     @Property(name = "laf", type = String.class)
 })
 public class NodeJsJava {
@@ -102,12 +102,13 @@ public class NodeJsJava {
             description = "nodeJsJavaDescription.html"
     )
     @Messages("nodeJsJavaWizard=Node.js+Java Application")
-    public static NodeJsJavaModel nodejsJavaAppWizard() {
+    public static NodeJsJavaModel nodejsJavaAppWizard() throws IOException {
         NodeJsJavaModel data = new NodeJsJavaModel();
         setUIDefaults(data);
         findGraalVM(data);
         data.setUnitTesting(true);
         data.setServerCode(ServerCode.js);
+        data.setArchetypeVersion(findArchetypeVersion());
         return data;
     }
 
