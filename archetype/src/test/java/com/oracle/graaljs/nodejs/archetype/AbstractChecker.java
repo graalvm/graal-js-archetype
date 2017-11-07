@@ -74,6 +74,7 @@ import org.apache.maven.it.VerificationException;
 import org.apache.maven.it.Verifier;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -106,9 +107,12 @@ public abstract class AbstractChecker {
         Verifier maven = new Verifier(workdir.getPath());
         maven.deleteDirectory(workdirName);
 
+        String version = System.getProperty("archVersion");
+        assertNotNull("version is specified", version);
+
         maven.getSystemProperties().put("archetypeGroupId", "com.oracle.graal-js");
         maven.getSystemProperties().put("archetypeArtifactId", "nodejs-archetype");
-        maven.getSystemProperties().put("archetypeVersion", "1.0-SNAPSHOT");
+        maven.getSystemProperties().put("archetypeVersion", version);
         maven.getSystemProperties().put("archetypeCatalog", "local");
         maven.getSystemProperties().put("artifactId", workdirName);
         maven.getSystemProperties().put("groupId", "test.oracle.test");
