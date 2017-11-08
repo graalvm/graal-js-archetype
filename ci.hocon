@@ -1,0 +1,29 @@
+common: {
+  packages: {
+    git: ">=1.8.3"
+    maven: "==3.3.9"
+  }
+  timelimit: "30:00"
+}
+
+test: ${common} {
+  environment : {
+    JAVA_HOME : ../.graalvm
+  }
+  setup: [
+    [curl, -L, "http://graal.us.oracle.com/downloads/latest/linux", -o, "graalvm.tgz"]
+    [tar, fxz, "graalvm.tgz"]
+    [mv, graalvm-*dev*, .graalvm]
+  ]
+  run: [
+    [cd, archetype]
+    [mvn, install]
+  ]
+  timelimit: "45:00"
+}
+
+gate: {capabilities: [linux, amd64], targets: [gate]}
+
+builds = [
+  ${test} ${gate} {name: test-linux-amd64}
+]
