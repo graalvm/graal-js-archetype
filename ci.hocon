@@ -18,7 +18,7 @@ test: ${common} {
   run: [
     [cd, archetype]
     [mvn, install]
-    [grep, "version>.*-SNAPSHOT./version", "pom.xml", "||", mvn, source:jar, javadoc:jar, gpg:sign, deploy]
+    [grep, "version>.*-SNAPSHOT./version", "pom.xml", "||", mvn, clean, package, source:jar, javadoc:jar, gpg:sign, deploy]
   ]
   timelimit: "45:00"
 }
