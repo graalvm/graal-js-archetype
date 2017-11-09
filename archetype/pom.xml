@@ -51,6 +51,24 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+    <name>Graal.js Archetype</name>
+    <description>
+        Archetype to start mixed Java/JavaScript development on top of
+        GraalVM - a JVM with polyglot capabilities. The GraalVM comes
+        with a 100% compatible node.js implementation that can easily execute
+        Java code as well as code in other scripting languages like Ruby,
+        R language or Python.
+    </description>
+    <url>https://github.com/graalvm/graal-js-archetype</url>
+    <developers>
+        <developer>
+            <id>jtulach</id>
+            <organization>Oracle</organization>
+            <name>Jaroslav Tulach</name>
+            <email>jaroslav.tulach@oracle.com</email>
+            <url>http://github.com/jaroslavtulach</url>
+        </developer>
+    </developers>
     <organization>
         <name>Oracle</name>
         <url>http://oracle.com</url>
@@ -67,6 +85,16 @@
         <url>https://github.com/graalvm/graal-js-archetype/tree/${project.scm.tag}</url>
         <tag>master</tag>
     </scm>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
     <build>
         <plugins>
             <plugin>
