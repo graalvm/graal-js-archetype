@@ -221,7 +221,10 @@
                 <ul>
                     <li><b>artifactId</b>: <span>nodejs-archetype</span></li>
                     <li><b>groupId</b>: <span>com.oracle.graal-js</span></li>
-                    <li><b>version</b>: <span data-bind="text: archetypeVersion"></span></li>
+                    <li><b>version</b>: 
+                        <select data-bind="options: archetypeVersions, value: archetypeVersion">
+                        </select>
+                    </li>
                 </ul>
                 <p>
                     You can execute or debug the generated program. Place

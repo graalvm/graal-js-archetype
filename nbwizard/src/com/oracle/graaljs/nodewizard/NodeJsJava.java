@@ -50,6 +50,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -63,6 +64,7 @@ import net.java.html.json.ComputedProperty;
 import net.java.html.json.Function;
 import net.java.html.json.Model;
 import net.java.html.json.OnPropertyChange;
+import net.java.html.json.OnReceive;
 import net.java.html.json.Property;
 import org.netbeans.api.java.platform.JavaPlatform;
 import org.netbeans.api.java.platform.JavaPlatformManager;
@@ -85,6 +87,7 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "unitTesting", type = boolean.class),
     @Property(name = "graalvmPath", type = String.class),
     @Property(name = "graalvmCheck", type = String.class),
+    @Property(name = "archetypeVersions", type = String.class, array = true),
     @Property(name = "archetypeVersion", type = String.class),
     @Property(name = "laf", type = String.class)
 })
@@ -108,7 +111,10 @@ public class NodeJsJava {
         findGraalVM(data);
         data.setUnitTesting(true);
         data.setServerCode(ServerCode.js);
-        data.setArchetypeVersion(findArchetypeVersion());
+        final String localVersion = findArchetypeVersion();
+        data.setArchetypeVersion(localVersion);
+        data.getArchetypeVersions().add(localVersion);
+        data.searchArtifact("com.oracle.graal-js", "nodejs-archetype");
         return data;
     }
 
@@ -246,6 +252,31 @@ public class NodeJsJava {
     static String archetypeCatalog() {
         final String userHome = System.getProperty("user.home");
         return verifyArchetypeExists(userHome) ? "local" : "remote";
+    }
+
+    @OnReceive(url = "http://search.maven.org/solrsearch/select?q=g:{group}%20AND%20a:{artifact}&wt=json")
+    static void searchArtifact(NodeJsJavaModel model, QueryResult result) {
+        if (result != null && result.getResponse() != null) {
+            for (QueryArtifact doc : result.getResponse().getDocs()) {
+                if (
+                    doc.getA().equals("nodejs-archetype") &&
+                    doc.getG().equals("com.oracle.graal-js") &&
+                    doc.getLatestVersion() != null
+                ) {
+                    final List<String> knownVersions = model.getArchetypeVersions();
+                    final String lastest = doc.getLatestVersion();
+                    model.setArchetypeVersion(lastest);
+                    knownVersions.clear();
+                    knownVersions.add(lastest);
+                    try {
+                        knownVersions.add(findArchetypeVersion());
+                    } catch (IOException ex) {
+                        // ignore
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     static boolean verifyArchetypeExists(final String userHome) {
