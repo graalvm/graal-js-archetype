@@ -25,19 +25,17 @@ the context of [GraalVM](http://www.oracle.com/technetwork/oracle-labs/program-l
 
 ## Getting Started
 
-First step is to compile and register the **Node.js+Java Maven Archetype** into
-your local [Maven](http://maven.apache.org) repository. To do so invoke:
-```bash
-$ nodejs-archetype$ mvn -f archetype/ clean install -DskipTests
-```
-Once done, you can start creating your projects. Change directory into an
+The **Node.js+Java Maven Archetype**
+[releases are uploaded to Maven central](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22com.oracle.graal-js%22%20a%3A%22nodejs-archetype%22) repository. Thus, creation of your
+sample project is a matter of a few shell commands.
+
+Change directory into an
 *empty folder* and invoke (here is an [example](docs/MavenHowTo.md) of a command
 line interaction for [Maven](http://maven.apache.org) newbies):
 ```bash
-$ mvn -DarchetypeCatalog=local \
-      -DarchetypeGroupId=com.oracle.graal-js \
+$ mvn -DarchetypeGroupId=com.oracle.graal-js \
       -DarchetypeArtifactId=nodejs-archetype \
-      -DarchetypeVersion=1.0-SNAPSHOT \
+      -DarchetypeVersion=0.1 \
       archetype:generate \
       -DgraalvmPath=$HOME/bin/graalvm-0.29/
 # and optionaly any of these
@@ -49,7 +47,7 @@ $ mvn -DarchetypeCatalog=local \
 ```
 after [answering few questions](MavenHowTo.md) about the name (e.g. `artifactId`),
 `groupId` (something like root package in Java) and version (usually `1.0-SNAPSHOT`,
-just press Enter to accept the default)
+to accept the default just press enter)
 of your project, the skeleton of it gets generated.
 Change path to its root directory:
 ```bash
@@ -130,6 +128,54 @@ $ curl http://localhost:8080/js/5
 **Java** gives us an easy to use paralelism that would be hard to achieve in
 a single threaded language like **JavaScript** and environments like
 [node.js](http://nodejs.org).
+
+## Contributing
+
+Improvements to the archetype to better show the greatness of synergy between
+*Java Virtual Machine* and *node.js* are welcomed. Contribute to this project
+by forking [its repository](http://github.com/graalvm/graal-js-archetype).
+
+First step is to compile and register the development version **1.0-SNAPSHOT**
+of **Node.js+Java Maven Archetype** into
+your local [Maven](http://maven.apache.org) repository. To do so invoke:
+```bash
+graal-js-archetype$ mvn -f archetype/ clean install -DskipTests
+```
+Once done, you can start creating your projects. You can use the same
+steps as with released versions, just specify **1.0-SNAPSHOT** as
+the **archetypeVersion**:
+```bash
+$ mvn -DarchetypeCatalog=local \
+      -DarchetypeGroupId=com.oracle.graal-js \
+      -DarchetypeArtifactId=nodejs-archetype \
+      -DarchetypeVersion=1.0-SNAPSHOT \
+      archetype:generate \
+      -DgraalvmPath=$HOME/bin/graalvm-0.29/
+```
+
+Make your modifications in `archetype/src/main/resources/` directory. It
+contains the template files which are then processed by
+[velocity templating engine](http://velocity.apache.org/) into final form
+when instantiating the archetype:
+```bash
+graal-js-archetype$ find archetype/src/main/resources/
+archetype/src/main/resources/archetype-resources/nbactions.xml
+archetype/src/main/resources/archetype-resources/pom.xml
+archetype/src/main/resources/archetype-resources/src/main/java/Services.java
+archetype/src/main/resources/archetype-resources/src/main/js/launcher.js
+archetype/src/main/resources/archetype-resources/src/main/js/package.json
+archetype/src/main/resources/archetype-resources/src/test/java/ServicesTest.java
+archetype/src/main/resources/META-INF/maven/archetype-metadata.xml
+```
+once your modifications are done, repeat the development steps. Install the
+archetype into your local repository, use it and so on, so on.
+
+When you are happy with your changes, invoke the tests that verify the
+archetype works in all known configurations:
+```bash
+graal-js-archetype/archetype$ mvn clean install
+```
+The tests take a while, yet ensures quality of your contribution.
 
 ## UI for the Archetype
 
