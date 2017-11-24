@@ -123,6 +123,7 @@ public class Services {
 #end
     }
 
+    @FunctionalInterface
     public interface Require {
         Object require(String module);
     }
