@@ -37,7 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *#
-/* global Java, Interop */
+/* global Java, Polyglot.*/
 
 if (typeof Java === 'undefined' || !Java.Worker) {
     throw 'Use GraalVM 0.29 or newer with enabled --jvm interop!';
@@ -72,7 +72,7 @@ var algorithms = {
 #end
 #if ($algorithmRuby.equals("true"))
     'ruby' : function (n) {
-        algorithms.ruby = Interop.eval("application/x-ruby",
+        algorithms.ruby = Polyglot.eval("application/x-ruby",
             "def fac(n)\n" +
             "  f = (1..n).reduce(1, :*)\n" +
             "  f.to_s\n" +
@@ -84,7 +84,7 @@ var algorithms = {
 #end
 #if ($algorithmR.equals("true"))
     'r' : function r(n) {
-        algorithms.r = Interop.eval("text/x-r", "factorial");
+        algorithms.r = Polyglot.eval("text/x-r", "factorial");
         return algorithms.r(n);
     },
 #end
