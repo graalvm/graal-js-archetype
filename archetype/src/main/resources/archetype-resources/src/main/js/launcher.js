@@ -37,10 +37,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *#
-/* global Java, Polyglot.*/
+/* global Java, Interop, Polyglot.*/
 
 if (typeof Java === 'undefined' || !Java.Worker) {
     throw 'Use GraalVM 0.29 or newer with enabled --jvm interop!';
+}
+if (typeof Polyglot === 'undefined') {
+    if (typeof Interop === 'undefined') {
+        throw new 'GraalVM has to define Polyglot global symbol!';
+    }
+    Polyglot = Interop;
 }
 
 var executor = new Java.Worker();
