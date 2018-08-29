@@ -50,6 +50,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <graalvm>${java.home}/../</graalvm>
     </properties>
     <name>Graal.js Archetype</name>
     <description>
@@ -209,17 +210,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <profiles>
-        <profile>
-            <id>graalvm</id>
-            <activation>
-                <file>
-                    <exists>${java.home}/../bin/node</exists>
-                </file>
-            </activation>
-            <properties>
-                <graalvm>${java.home}/../</graalvm>
-            </properties>
-        </profile>
-    </profiles>
 </project>

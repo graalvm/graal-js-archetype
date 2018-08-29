@@ -43,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -78,6 +80,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 import org.junit.Test;
 
 public abstract class AbstractChecker {
@@ -96,6 +99,10 @@ public abstract class AbstractChecker {
         int[] port,
         boolean java, boolean js, boolean ruby, boolean r, boolean unitTest
     ) throws IOException, VerificationException {
+        skipWithoutLanguage("js");
+        if (ruby) skipWithoutLanguage("ruby");
+        if (r) skipWithoutLanguage("r");
+
         File basedir = new File(System.getProperty("basedir"));
         assertTrue("Basedir is dir", basedir.isDirectory());
 
@@ -478,6 +485,39 @@ public abstract class AbstractChecker {
             return (IOException) new ConnectException(sb.toString()).initCause(cause);
         }
         return new IOException(sb.toString(), cause);
+    }
+
+    private void skipWithoutLanguage(String id) {
+        String javaHome = System.getProperty("java.home");
+        assertNotNull("java.home property must be available", javaHome);
+        File jre = new File(javaHome);
+        File node = new File(new File(jre, "bin"), "node");
+        assertTrue("Missing " + node + " use -Dgraalvm=... to point to GraalVM 1.0 and newer installations", node.exists());
+
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(node.getPath(), "--polyglot", "-e", "print(Polyglot.eval('" + id + "', '42'))");
+            Process p = pb.start();
+            p.waitFor(10, TimeUnit.SECONDS);
+            readFully(p.getErrorStream(), sb);
+            readFully(p.getInputStream(), sb);
+        } catch (IOException | InterruptedException ex) {
+            throw new AssertionError(ex);
+        }
+
+        assumeTrue("Evaluation with " + id + " wasn't successful: " + sb, "42\n".equals(sb.toString()));
+    }
+
+    private void readFully(InputStream in, StringBuilder sb) throws IOException {
+        BufferedReader r = new BufferedReader(new InputStreamReader(in));
+        for (;;) {
+            String line = r.readLine();
+            if (line == null) {
+                break;
+            }
+            sb.append(line).append("\n");
+        }
     }
 
     private class Maven extends Verifier {
