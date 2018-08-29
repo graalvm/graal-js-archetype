@@ -523,7 +523,15 @@ public abstract class AbstractChecker {
             throw new AssertionError(ex);
         }
 
-        assumeTrue("Evaluation with " + id + " wasn't successful: " + sb, "42\n".equals(sb.toString()));
+        final boolean successful = "42\n".equals(sb.toString());
+        if (!successful) {
+            for (String lang : System.getProperty("hasLanguages", "").split(",")) {
+                if (id.matches(lang)) {
+                    fail("Language " + id + " should be present, but:\n" + sb);
+                }
+            }
+        }
+        assumeTrue("Evaluation with " + id + " wasn't successful: " + sb, successful);
     }
 
     private void readFully(InputStream in, StringBuilder sb) throws IOException {
