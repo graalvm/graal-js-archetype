@@ -172,6 +172,7 @@ public abstract class AbstractChecker {
                 }
             } while (again);
         });
+        mvnProject.addCliOption("--quiet");
         return mvnProject;
     }
 
@@ -347,15 +348,31 @@ public abstract class AbstractChecker {
         int previousPort = port[0];
         String[] addresses = findAddresses();
         StringBuilder log = new StringBuilder();
-        while (failures++ < 500) {
+        final int maxRetry = 500;
+        while (failures++ < maxRetry) {
             if (previousPort != port[0]) {
                 CONSOLE.log(Level.INFO, "Port changed from {0} to {1}. Resetting connections.", new Object[]{previousPort, port[0]});
                 previousPort = port[0];
                 failures = 0;
             }
             URL u = new URL("http", addresses[failures % addresses.length], port[0], file);
-            log.append("Attempt ").append(failures).append(". Connecting to ").append(u).append("\n");
-            CONSOLE.log(Level.INFO, "Attempt {0}. Connecting to {1}", new Object[]{failures, u});
+            File lf = new File(prj.getBasedir(), prj.getLogFileName());
+            boolean doLog = false;
+            if (lf.length() == 0) {
+                if (failures > 0 && failures % 50 == 0) {
+                    doLog = true;
+                }
+                if (failures > (int) (maxRetry * 0.9)) {
+                    doLog = true;
+                }
+            } else {
+                doLog = true;
+            }
+            if (doLog) {
+                String logMsg = String.format("Attempt %d, log file size %d, connecting to %s", failures, lf.length(), u);
+                log.append(logMsg).append("\n");
+                CONSOLE.log(Level.INFO, logMsg);
+            }
             try (BufferedReader b = openReader(u)) {
                 StringBuilder sb = new StringBuilder();
                 for (;;) {
