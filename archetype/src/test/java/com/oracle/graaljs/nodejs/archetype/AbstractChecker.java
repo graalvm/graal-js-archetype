@@ -43,6 +43,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
@@ -65,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -78,6 +80,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 import org.junit.Test;
 
 public abstract class AbstractChecker {
@@ -96,6 +99,10 @@ public abstract class AbstractChecker {
         int[] port,
         boolean java, boolean js, boolean ruby, boolean r, boolean unitTest
     ) throws IOException, VerificationException {
+        skipWithoutLanguage("js");
+        if (ruby) skipWithoutLanguage("ruby");
+        if (r) skipWithoutLanguage("r");
+
         File basedir = new File(System.getProperty("basedir"));
         assertTrue("Basedir is dir", basedir.isDirectory());
 
@@ -165,6 +172,7 @@ public abstract class AbstractChecker {
                 }
             } while (again);
         });
+        mvnProject.addCliOption("--quiet");
         return mvnProject;
     }
 
@@ -340,15 +348,31 @@ public abstract class AbstractChecker {
         int previousPort = port[0];
         String[] addresses = findAddresses();
         StringBuilder log = new StringBuilder();
-        while (failures++ < 500) {
+        final int maxRetry = 500;
+        while (failures++ < maxRetry) {
             if (previousPort != port[0]) {
                 CONSOLE.log(Level.INFO, "Port changed from {0} to {1}. Resetting connections.", new Object[]{previousPort, port[0]});
                 previousPort = port[0];
                 failures = 0;
             }
             URL u = new URL("http", addresses[failures % addresses.length], port[0], file);
-            log.append("Attempt ").append(failures).append(". Connecting to ").append(u).append("\n");
-            CONSOLE.log(Level.INFO, "Attempt {0}. Connecting to {1}", new Object[]{failures, u});
+            File lf = new File(prj.getBasedir(), prj.getLogFileName());
+            boolean doLog = false;
+            if (lf.length() == 0) {
+                if (failures > 0 && failures % 50 == 0) {
+                    doLog = true;
+                }
+                if (failures > (int) (maxRetry * 0.9)) {
+                    doLog = true;
+                }
+            } else {
+                doLog = true;
+            }
+            if (doLog) {
+                String logMsg = String.format("Attempt %d, log file size %d, connecting to %s", failures, lf.length(), u);
+                log.append(logMsg).append("\n");
+                CONSOLE.log(Level.INFO, logMsg);
+            }
             try (BufferedReader b = openReader(u)) {
                 StringBuilder sb = new StringBuilder();
                 for (;;) {
@@ -478,6 +502,47 @@ public abstract class AbstractChecker {
             return (IOException) new ConnectException(sb.toString()).initCause(cause);
         }
         return new IOException(sb.toString(), cause);
+    }
+
+    private void skipWithoutLanguage(String id) {
+        String javaHome = System.getProperty("java.home");
+        assertNotNull("java.home property must be available", javaHome);
+        File jre = new File(javaHome);
+        File node = new File(new File(jre, "bin"), "node");
+        assertTrue("Missing " + node + " use -Dgraalvm=... to point to GraalVM 1.0 and newer installations", node.exists());
+
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(node.getPath(), "--polyglot", "-e", "print(Polyglot.eval('" + id + "', '42'))");
+            Process p = pb.start();
+            p.waitFor(10, TimeUnit.SECONDS);
+            readFully(p.getErrorStream(), sb);
+            readFully(p.getInputStream(), sb);
+        } catch (IOException | InterruptedException ex) {
+            throw new AssertionError(ex);
+        }
+
+        final boolean successful = "42\n".equals(sb.toString());
+        if (!successful) {
+            for (String lang : System.getProperty("hasLanguages", "").split(",")) {
+                if (id.matches(lang)) {
+                    fail("Language " + id + " should be present, but:\n" + sb);
+                }
+            }
+        }
+        assumeTrue("Evaluation with " + id + " wasn't successful: " + sb, successful);
+    }
+
+    private void readFully(InputStream in, StringBuilder sb) throws IOException {
+        BufferedReader r = new BufferedReader(new InputStreamReader(in));
+        for (;;) {
+            String line = r.readLine();
+            if (line == null) {
+                break;
+            }
+            sb.append(line).append("\n");
+        }
     }
 
     private class Maven extends Verifier {

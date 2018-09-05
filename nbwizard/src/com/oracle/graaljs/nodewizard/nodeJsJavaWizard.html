@@ -44,62 +44,8 @@
         <title>Java+Node.js Application</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body{
-                font-family: Dialog;
-                font-size: 13px;
-                width: 90%;
-                background-color: #eeeeee;
-            }
-
-            #locations{
-                display: table;
-            }
-
-            .form-field{
-                display: table-row;
-            }
-
-            .form-field > label, .form-field > input, .form-field > button{
-                display: table-cell;
-            }
-
-            .error {
-                position: absolute;
-                color: red;
-                bottom: 2em;
-                margin-top: 16px;
-            }
-
-            label.checkbox-label input[type=checkbox]{
-                position: relative;
-                vertical-align: middle;
-                bottom: 2px;
-            }
-
-            input.choose {
-                width: 100%;
-            }
-
-            div.choose {
-                position: relative;
-                padding-right: .5em;
-            }
-
-            button.choose {
-                position: absolute;
-                right: 0px;
-            }
-
-            label.checkbox-label input[type=radio]{
-                position: relative;
-                vertical-align: middle;
-                bottom: 2px;
-            }
-        </style>
     </head>
     <body id="body">
-        <link data-bind="attr: {href: laf}" href="#" rel="stylesheet" type="text/css"/>
         <div>
             <section data-bind="step: { 'id' : 'graalvm', text : 'Select GraalVM JDK'}" >
                 <strong>Choose the GraalVM to run your application with:</strong>
@@ -240,6 +186,7 @@
                 </p>
             </section>
         </div>
+        <p></p>
         <!-- display the error message -->
         <div data-bind="visible: errorCode() === 1" class="error">
             Missing GraalVM! <code><span data-bind="text: graalvmPath"></span>/bin/node</code> doesn't exist.

@@ -58,8 +58,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
-import javax.swing.LookAndFeel;
-import javax.swing.UIManager;
 import net.java.html.json.ComputedProperty;
 import net.java.html.json.Function;
 import net.java.html.json.Model;
@@ -89,7 +87,6 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "graalvmCheck", type = String.class),
     @Property(name = "archetypeVersions", type = String.class, array = true),
     @Property(name = "archetypeVersion", type = String.class),
-    @Property(name = "laf", type = String.class)
 })
 public class NodeJsJava {
     private static final String ARCH_JAR_NAME = "nodejs-archetype.jar";
@@ -107,7 +104,6 @@ public class NodeJsJava {
     @Messages("nodeJsJavaWizard=Node.js+Java Application")
     public static NodeJsJavaModel nodejsJavaAppWizard() throws IOException {
         NodeJsJavaModel data = new NodeJsJavaModel();
-        setUIDefaults(data);
         findGraalVM(data);
         data.setUnitTesting(true);
         data.setServerCode(ServerCode.js);
@@ -366,33 +362,6 @@ public class NodeJsJava {
             }
             os.write(arr, 0, len);
         }
-    }
-
-    private static void setUIDefaults(final NodeJsJavaModel data) {
-        LookAndFeel lookAndFeel = UIManager.getLookAndFeel();
-        String name = lookAndFeel.getName();
-        switch (name) {
-            case "Mac OS X":
-                name = "mac";
-                break;
-            case "Metal":
-                name = "metal";
-                break;
-            case "GTK look and feel":
-                name = "gtk";
-                break;
-            case "Nimbus":
-                name = "nimbus";
-                break;
-            case "Windows":
-                name = "win";
-                break;
-            case "Darcula":
-                name = "darcula";
-                break;
-        }
-        final String resource = "css/wizard-" + name + ".css";
-        data.setLaf(resource);
     }
 
     enum ServerCode {
