@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -349,6 +350,7 @@ public abstract class AbstractChecker {
         String[] addresses = findAddresses();
         StringBuilder log = new StringBuilder();
         final int maxRetry = 500;
+        boolean firstDump = false;
         while (failures++ < maxRetry) {
             if (previousPort != port[0]) {
                 CONSOLE.log(Level.INFO, "Port changed from {0} to {1}. Resetting connections.", new Object[]{previousPort, port[0]});
@@ -364,6 +366,10 @@ public abstract class AbstractChecker {
                 }
                 if (failures > (int) (maxRetry * 0.9)) {
                     doLog = true;
+                    if (!firstDump) {
+                        dumpStackOfNode();
+                        firstDump = true;
+                    }
                 }
             } else {
                 doLog = true;
@@ -491,6 +497,12 @@ public abstract class AbstractChecker {
     }
 
     private static IOException dumpLogFile(StringBuilder sb, Verifier prj, Throwable cause) throws IOException {
+        try {
+            dumpStackOfNode();
+        } catch (InterruptedException ex) {
+            throw (InterruptedIOException) new InterruptedIOException(ex.getMessage()).initCause(ex);
+        }
+
         File log = new File(prj.getBasedir(), prj.getLogFileName());
         if (!log.isFile()) {
             sb.append("\nlog file doesn't exist: ").append(log);
@@ -534,7 +546,7 @@ public abstract class AbstractChecker {
         assumeTrue("Evaluation with " + id + " wasn't successful: " + sb, successful);
     }
 
-    private void readFully(InputStream in, StringBuilder sb) throws IOException {
+    private static void readFully(InputStream in, StringBuilder sb) throws IOException {
         BufferedReader r = new BufferedReader(new InputStreamReader(in));
         for (;;) {
             String line = r.readLine();
@@ -561,5 +573,39 @@ public abstract class AbstractChecker {
             }
             CONSOLE.log(Level.INFO, "OK");
         }
+    }
+
+    private static void dumpStackOfNode() throws IOException, InterruptedException {
+        String javaHome = System.getProperty("java.home");
+        final File jdk = new File(javaHome).getParentFile();
+        final File bin = new File(jdk, "bin");
+        final File jps = new File(bin, "jps");
+        final File jstack = new File(bin, "jstack");
+        assertTrue("There should be " + jps, jps.exists());
+        assertTrue("There should be " + jstack, jstack.exists());
+        Process p = new ProcessBuilder().command(jps.getPath()).
+            redirectErrorStream(true).
+            start();
+
+        BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        for (;;) {
+            String line = r.readLine();
+            if (line == null) {
+                break;
+            }
+            String[] twoParts = line.trim().split(" ");
+            if (twoParts.length == 1) {
+                // node.js process has no Java name right now
+                Process stack = new ProcessBuilder().command(jstack.getPath(), twoParts[0]).
+                    redirectErrorStream(true).
+                    start();
+                StringBuilder sb = new StringBuilder();
+                readFully(stack.getInputStream(), sb);
+                CONSOLE.log(Level.INFO, sb.toString());
+                assertEquals("jstack execution for " + twoParts[0], 0, stack.waitFor());
+            }
+        }
+        int err = p.waitFor();
+        assertEquals("Execution OK", 0, err);
     }
 }
