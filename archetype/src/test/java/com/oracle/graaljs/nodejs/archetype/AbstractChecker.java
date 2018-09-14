@@ -366,13 +366,16 @@ public abstract class AbstractChecker {
                 }
                 if (failures > (int) (maxRetry * 0.9)) {
                     doLog = true;
-                    if (!firstDump) {
-                        dumpStackOfNode();
-                        firstDump = true;
-                    }
                 }
             } else {
                 doLog = true;
+            }
+            if (failures > (int) (maxRetry * 0.8)) {
+                doLog = true;
+                if (!firstDump) {
+                    dumpStackOfNode(log);
+                    firstDump = true;
+                }
             }
             if (doLog) {
                 String logMsg = String.format("Attempt %d, log file size %d, connecting to %s", failures, lf.length(), u);
@@ -498,7 +501,7 @@ public abstract class AbstractChecker {
 
     private static IOException dumpLogFile(StringBuilder sb, Verifier prj, Throwable cause) throws IOException {
         try {
-            dumpStackOfNode();
+            dumpStackOfNode(sb);
         } catch (InterruptedException ex) {
             throw (InterruptedIOException) new InterruptedIOException(ex.getMessage()).initCause(ex);
         }
@@ -575,7 +578,15 @@ public abstract class AbstractChecker {
         }
     }
 
-    private static void dumpStackOfNode() throws IOException, InterruptedException {
+    private static void dumpStackOfNode(StringBuilder sb, String msg, Object... args) {
+        CONSOLE.log(Level.INFO, msg, args);
+        for (int i = 0; i < args.length; i++) {
+            msg = msg.replace("{" + i + "}", args[i].toString());
+        }
+        sb.append(msg).append("\n");
+    }
+
+    private static void dumpStackOfNode(StringBuilder sb) throws IOException, InterruptedException {
         String javaHome = System.getProperty("java.home");
         final File jdk = new File(javaHome).getParentFile();
         final File bin = new File(jdk, "bin");
@@ -583,6 +594,7 @@ public abstract class AbstractChecker {
         final File jstack = new File(bin, "jstack");
         assertTrue("There should be " + jps, jps.exists());
         assertTrue("There should be " + jstack, jstack.exists());
+        dumpStackOfNode(sb, "launching process {0}", jps);
         Process p = new ProcessBuilder().command(jps.getPath()).
             redirectErrorStream(true).
             start();
@@ -594,18 +606,22 @@ public abstract class AbstractChecker {
                 break;
             }
             String[] twoParts = line.trim().split(" ");
+            dumpStackOfNode(sb, "jps output parsed as {0}", Arrays.toString(twoParts));
             if (twoParts.length == 1) {
                 // node.js process has no Java name right now
                 Process stack = new ProcessBuilder().command(jstack.getPath(), twoParts[0]).
                     redirectErrorStream(true).
                     start();
-                StringBuilder sb = new StringBuilder();
-                readFully(stack.getInputStream(), sb);
-                CONSOLE.log(Level.INFO, sb.toString());
+                StringBuilder jstackOut = new StringBuilder();
+                readFully(stack.getInputStream(), jstackOut);
+                dumpStackOfNode(jstackOut, jstackOut.toString());
                 assertEquals("jstack execution for " + twoParts[0], 0, stack.waitFor());
             }
         }
+        dumpStackOfNode(sb, "Waiting for {0}", jps);
         int err = p.waitFor();
+        dumpStackOfNode(sb, "Execution of {0} finished with exit code {1}", new Object[]{jps, err});
         assertEquals("Execution OK", 0, err);
+        fail("Dump!");
     }
 }
