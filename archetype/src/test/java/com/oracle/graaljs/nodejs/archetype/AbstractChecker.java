@@ -570,9 +570,11 @@ public abstract class AbstractChecker {
             CONSOLE.log(Level.INFO, "executing {0} at {1}", new Object[]{goals, getBasedir()});
             try {
                 super.executeGoals(goals, envVars);
-            } catch (VerificationException ex) {
+            } catch (VerificationException | Error | RuntimeException ex) {
                 CONSOLE.log(Level.SEVERE, "failed " + ex.getMessage(), ex);
                 throw ex;
+            } finally {
+                CONSOLE.log(Level.INFO, " finished {0} at {1}", new Object[]{goals, getBasedir()});
             }
             CONSOLE.log(Level.INFO, "OK");
         }
