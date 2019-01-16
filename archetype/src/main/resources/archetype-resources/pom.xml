@@ -63,6 +63,7 @@
                     <executable>${graalvm}/bin/node</executable>
                     <classpathScope>runtime</classpathScope>
                     <arguments>
+                        <argument>--experimental-worker</argument>
                         <argument>--polyglot</argument>
                         <argument>--jvm.${debug.arg}</argument>
                         <argument>--jvm.classpath</argument>
@@ -78,7 +79,7 @@
                 <version>2.20</version>
                 <configuration>
                     <jvm>${graalvm}/bin/node</jvm>
-                    <argLine>--polyglot --use-classpath-env-var --jvm.${debug.arg} ${basedir}/src/main/js/launcher.js</argLine>
+                    <argLine>--experimental-worker --polyglot --use-classpath-env-var --jvm.${debug.arg} ${basedir}/src/main/js/launcher.js</argLine>
                     <useSystemClassLoader>false</useSystemClassLoader>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                 </configuration>

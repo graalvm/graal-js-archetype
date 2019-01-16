@@ -37,10 +37,47 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  *#
+
+/* Utility Node.js worker used to offload Java calls to another thread. */
+
+function NodeInteropWorker() {
+    const HashMap = Java.type('java.util.HashMap');
+    const { Worker } = require('worker_threads');
+    this.worker = new Worker(`
+                        const { parentPort } = require('worker_threads');
+                        parentPort.on('message', (m) => {
+                            const factorial = m[0].factorial;
+                            const n = m[1];
+                            const id = m[2];
+                            const res = factorial(n);
+                            parentPort.postMessage([res, id]);
+                        });
+            `, {
+                eval: true
+            });
+    const idsToPromise = new HashMap();
+    var messageId = 0;
+    this.worker.on('message', function(m) {
+        const id = m[1];
+        const resolve = idsToPromise.remove(id)[0];
+        resolve(m[0]);
+    });
+    this.submit = function(services, n) {
+        const id = messageId++;
+        this.worker.postMessage([services, n, id]);
+        return new Promise(function(resolve, reject) {
+            idsToPromise.put(id, [resolve, reject]);
+        });
+    };
+    this.terminate = function() {
+        this.worker.terminate();
+    };
+}
+
 /* global Java, Interop, Polyglot.*/
 
-if (typeof Java === 'undefined' || !Java.Worker) {
-    throw 'Use GraalVM 0.29 or newer with enabled --jvm interop!';
+if (typeof Java === 'undefined') {
+    throw 'Use GraalVM 1.0-RC11 or newer with enabled --jvm interop!';
 }
 if (typeof Polyglot === 'undefined') {
     if (typeof Interop === 'undefined') {
@@ -49,7 +86,7 @@ if (typeof Polyglot === 'undefined') {
     Polyglot = Interop;
 }
 
-var executor = new Java.Worker();
+var executor = new NodeInteropWorker();
 var className = "${package}.Services";
 var servicesClass = Java.type(className);
 var services = new servicesClass(require, global, async (work, finish) => {
@@ -66,7 +103,7 @@ global.cast = function(value, prototype) {
 var algorithms = {
 #if ($algorithmJava.equals("true"))
     'java' : function(n, worker) {
-        return worker ? worker.submit(services.factorial, [ n ]) : services.factorial(n);
+        return worker ? worker.submit(services, n) : services.factorial(n);
     },
 #end
 #if ($algorithmJS.equals("true"))
