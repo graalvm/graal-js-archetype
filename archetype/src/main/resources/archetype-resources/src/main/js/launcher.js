@@ -85,6 +85,7 @@ if (typeof Polyglot === 'undefined') {
     }
     Polyglot = Interop;
 }
+global.Interop = function() { return Polyglot };
 
 var executor = new NodeInteropWorker();
 var className = "${package}.Services";
