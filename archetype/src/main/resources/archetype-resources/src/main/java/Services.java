@@ -81,7 +81,7 @@ public class Services {
 #if (!$serverCode.equals("js"))
         final Object rawHttp = require.require("http");
         Http http = global.cast(rawHttp, (Http) null);
-        Server server = http.createServer((thiz, in, out) -> {
+        Server server = http.createServer((in, out) -> {
             final String url = in.url();
             if (url.equals("/quit")) {
                 out.end("Quiting...\n");
@@ -152,7 +152,7 @@ public class Services {
 
     @FunctionalInterface
     public interface Handler {
-        public void call(Object thiz, IncommingMessage in, ServerResponse out);
+        public void call(IncommingMessage in, ServerResponse out);
     }
 
     public interface Server {

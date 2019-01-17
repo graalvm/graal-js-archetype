@@ -38,7 +38,7 @@
  * SOFTWARE.
  *#
 
-/* Utility Node.js worker used to offload Java calls to another thread. */
+/* Convenience Node.js worker used to offload Java calls to another thread. */
 
 function NodeInteropWorker() {
     const HashMap = Java.type('java.util.HashMap');
@@ -46,11 +46,14 @@ function NodeInteropWorker() {
     this.worker = new Worker(`
                         const { parentPort } = require('worker_threads');
                         parentPort.on('message', (m) => {
-                            const factorial = m[0].factorial;
-                            const n = m[1];
-                            const id = m[2];
-                            const res = factorial(n);
-                            parentPort.postMessage([res, id]);
+                            var { id, target, options } = m;
+                            var args = [];
+                            if (options) {
+                                args = options.args ? options.args : [];
+                                target = options.method ? target[options.method] : target;
+                            }
+                            var result = Reflect.apply(target, undefined, args);
+                            parentPort.postMessage({result, id});
                         });
             `, {
                 eval: true
@@ -58,13 +61,13 @@ function NodeInteropWorker() {
     const idsToPromise = new HashMap();
     var messageId = 0;
     this.worker.on('message', function(m) {
-        const id = m[1];
+        const id = m.id;
         const resolve = idsToPromise.remove(id)[0];
-        resolve(m[0]);
+        resolve(m.result);
     });
-    this.submit = function(services, n) {
+    this.submit = function(target, options) {
         const id = messageId++;
-        this.worker.postMessage([services, n, id]);
+        this.worker.postMessage({id, target, options});
         return new Promise(function(resolve, reject) {
             idsToPromise.put(id, [resolve, reject]);
         });
@@ -86,6 +89,7 @@ if (typeof Polyglot === 'undefined') {
     Polyglot = Interop;
 }
 global.Interop = function() { return Polyglot };
+global.quit = function() { process.exit() };
 
 var executor = new NodeInteropWorker();
 var className = "${package}.Services";
@@ -104,7 +108,7 @@ global.cast = function(value, prototype) {
 var algorithms = {
 #if ($algorithmJava.equals("true"))
     'java' : function(n, worker) {
-        return worker ? worker.submit(services, n) : services.factorial(n);
+        return worker ? worker.submit(services, {method:'factorial', args:[n]}) : services.factorial(n);
     },
 #end
 #if ($algorithmJS.equals("true"))
