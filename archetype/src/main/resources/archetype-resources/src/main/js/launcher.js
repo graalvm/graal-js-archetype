@@ -38,66 +38,24 @@
  * SOFTWARE.
  *#
 
-/* Convenience Node.js worker used to offload Java calls to another thread. */
-
-function NodeInteropWorker() {
-    const HashMap = Java.type('java.util.HashMap');
-    const { Worker } = require('worker_threads');
-    this.worker = new Worker(`
-                        const { parentPort } = require('worker_threads');
-                        parentPort.on('message', (m) => {
-                            var { id, target, options } = m;
-                            var args = [];
-                            if (options) {
-                                args = options.args ? options.args : [];
-                                target = options.method ? target[options.method] : target;
-                            }
-                            var result = Reflect.apply(target, undefined, args);
-                            parentPort.postMessage({result, id});
-                        });
-            `, {
-                eval: true
-            });
-    const idsToPromise = new HashMap();
-    var messageId = 0;
-    this.worker.on('message', function(m) {
-        const id = m.id;
-        const resolve = idsToPromise.remove(id)[0];
-        resolve(m.result);
-    });
-    this.submit = function(target, options) {
-        const id = messageId++;
-        this.worker.postMessage({id, target, options});
-        return new Promise(function(resolve, reject) {
-            idsToPromise.put(id, [resolve, reject]);
-        });
-    };
-    this.terminate = function() {
-        this.worker.terminate();
-    };
-}
-
-/* global Java, Interop, Polyglot.*/
+/* global Java, Polyglot.*/
 
 if (typeof Java === 'undefined') {
     throw 'Use GraalVM 1.0-RC11 or newer with enabled --jvm interop!';
 }
 if (typeof Polyglot === 'undefined') {
-    if (typeof Interop === 'undefined') {
-        throw new 'GraalVM has to define Polyglot global symbol!';
-    }
-    Polyglot = Interop;
+    throw new 'GraalVM has to define Polyglot global symbol!';
 }
-global.Interop = function() { return Polyglot };
-global.quit = function() { process.exit() };
+const Worker = require('./polyglot_worker.js').NodePolyglotWorker;
 
-var executor = new NodeInteropWorker();
+var executor = new Worker();
 var className = "${package}.Services";
 var servicesClass = Java.type(className);
 var services = new servicesClass(require, global, async (work, finish) => {
     var r = await executor.submit(work);
     finish(r);
 });
+global.quit = function() { process.exit() };
 global.cast = function(value, prototype) {
     if (prototype != null) {
         throw "Use null as prototype, was: " + prototype;

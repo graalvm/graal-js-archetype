@@ -129,14 +129,14 @@ public class Services {
     }
 
     public interface Global {
-        public Interop Interop();
+        public Polyglot Polyglot();
         public void quit();
         public Http cast(Object value, Http prototype);
         public Server cast(Object value, Server prototype);
         public Computation cast(Object value, Computation prototype);
     }
 
-    public interface Interop {
+    public interface Polyglot {
         public Object eval(String mimeType, String code);
         public void export(String name, Object obj);
     }
@@ -228,7 +228,7 @@ public class Services {
                     "    return n * fac(n - 1);\n" +
                     "})\n";
 
-                Object fn = global.Interop().eval("text/javascript", jsCode);
+                Object fn = global.Polyglot().eval("text/javascript", jsCode);
                 js = global.cast(fn, (Computation) null);
             }
             return (Number) js.compute(n);
@@ -239,7 +239,7 @@ public class Services {
         @Override
         public final Number r(int n) {
             if (r == null) {
-                Object fn = global.Interop().eval("text/x-r", "factorial");
+                Object fn = global.Polyglot().eval("text/x-r", "factorial");
                 r = global.cast(fn, (Computation) null);
             }
             return (Number) r.compute(n);
@@ -256,7 +256,7 @@ public class Services {
                     "  f.to_s\n" +
                     "end\n" +
                     "method(:fac)";
-                Object fn = global.Interop().eval("application/x-ruby", rubyCode);
+                Object fn = global.Polyglot().eval("application/x-ruby", rubyCode);
                 ruby = global.cast(fn, (Computation) null);
             }
             return (String) ruby.compute(n);
