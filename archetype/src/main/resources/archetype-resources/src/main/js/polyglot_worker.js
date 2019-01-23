@@ -41,35 +41,42 @@
 /* Convenience Node.js worker used to offload Java calls to another thread. */
 
 function NodePolyglotWorker() {
-    const HashMap = Java.type('java.util.HashMap');
+    const TransferablePromiseCompletion = Java.type("${package}.Services.TransferablePromiseCompletion");
     const { Worker } = require('worker_threads');
     this.worker = new Worker(`
-                        const { parentPort } = require('worker_threads');
+                        const {parentPort} = require('worker_threads');
                         parentPort.on('message', (m) => {
-                            var { id, target, options } = m;
+                            var {completion, target, options} = m;
                             var args = [];
                             if (options) {
                                 args = options.args ? options.args : [];
                                 target = options.method ? target[options.method] : target;
                             }
-                            var result = Reflect.apply(target, undefined, args);
-                            parentPort.postMessage({result, id});
+                            try {
+                                var result = Reflect.apply(target, undefined, args);
+                                parentPort.postMessage({completion, result});
+                            } catch (error) {
+                                parentPort.postMessage({completion, error});
+                            }
                         });
             `, {
                 eval: true
             });
-    const idsToPromise = new HashMap();
-    var messageId = 0;
     this.worker.on('message', function(m) {
-        const id = m.id;
-        const resolve = idsToPromise.remove(id)[0];
-        resolve(m.result);
+        const {completion} = m;
+        if (m.error) {
+            const reject = completion.getPromiseReject();
+            reject(m.error);
+        } else {
+            const resolve = completion.getPromiseResolve();
+            resolve(m.result);
+        }
     });
     this.submit = function(target, options) {
-        const id = messageId++;
-        this.worker.postMessage({id, target, options});
+        const worker = this.worker;
         return new Promise(function(resolve, reject) {
-            idsToPromise.put(id, [resolve, reject]);
+            const completion = new TransferablePromiseCompletion(resolve, reject);
+            worker.postMessage({completion, target, options});
         });
     };
     this.terminate = function() {

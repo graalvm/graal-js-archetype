@@ -167,6 +167,28 @@ public class Services {
         void end(String text);
     }
 
+    public static final class TransferablePromiseCompletion {
+        private final Object resolve;
+        private final Object reject;
+        private final Thread ownerThread;
+
+        public TransferablePromiseCompletion(Object resolve, Object reject) {
+            this.resolve = resolve;
+            this.reject = reject;
+            this.ownerThread = Thread.currentThread();
+        }
+
+        public Object getPromiseResolve() {
+            assert Thread.currentThread() == this.ownerThread : "This object must be accessed from the creating thread";
+            return this.resolve;
+        }
+
+        public Object getPromiseReject() {
+            assert Thread.currentThread() == this.ownerThread : "This object must be accessed from the creating thread";
+            return this.reject;
+        }        
+    }
+
 #if ($algorithmJava.equals("true"))
     public BigInteger factorial(int value) {
         BigInteger one = BigInteger.valueOf(1);
