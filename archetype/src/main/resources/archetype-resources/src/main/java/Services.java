@@ -81,7 +81,7 @@ public class Services {
 #if (!$serverCode.equals("js"))
         final Object rawHttp = require.require("http");
         Http http = global.cast(rawHttp, (Http) null);
-        Server server = http.createServer((thiz, in, out) -> {
+        Server server = http.createServer((in, out) -> {
             final String url = in.url();
             if (url.equals("/quit")) {
                 out.end("Quiting...\n");
@@ -129,14 +129,14 @@ public class Services {
     }
 
     public interface Global {
-        public Interop Interop();
+        public Polyglot Polyglot();
         public void quit();
         public Http cast(Object value, Http prototype);
         public Server cast(Object value, Server prototype);
         public Computation cast(Object value, Computation prototype);
     }
 
-    public interface Interop {
+    public interface Polyglot {
         public Object eval(String mimeType, String code);
         public void export(String name, Object obj);
     }
@@ -152,7 +152,7 @@ public class Services {
 
     @FunctionalInterface
     public interface Handler {
-        public void call(Object thiz, IncommingMessage in, ServerResponse out);
+        public void call(IncommingMessage in, ServerResponse out);
     }
 
     public interface Server {
@@ -165,6 +165,28 @@ public class Services {
 
     public interface ServerResponse {
         void end(String text);
+    }
+
+    public static final class TransferablePromiseCompletion {
+        private final Object resolve;
+        private final Object reject;
+        private final Thread ownerThread;
+
+        public TransferablePromiseCompletion(Object resolve, Object reject) {
+            this.resolve = resolve;
+            this.reject = reject;
+            this.ownerThread = Thread.currentThread();
+        }
+
+        public Object getPromiseResolve() {
+            assert Thread.currentThread() == this.ownerThread : "This object must be accessed from the creating thread";
+            return this.resolve;
+        }
+
+        public Object getPromiseReject() {
+            assert Thread.currentThread() == this.ownerThread : "This object must be accessed from the creating thread";
+            return this.reject;
+        }        
     }
 
 #if ($algorithmJava.equals("true"))
@@ -228,7 +250,7 @@ public class Services {
                     "    return n * fac(n - 1);\n" +
                     "})\n";
 
-                Object fn = global.Interop().eval("text/javascript", jsCode);
+                Object fn = global.Polyglot().eval("text/javascript", jsCode);
                 js = global.cast(fn, (Computation) null);
             }
             return (Number) js.compute(n);
@@ -239,7 +261,7 @@ public class Services {
         @Override
         public final Number r(int n) {
             if (r == null) {
-                Object fn = global.Interop().eval("text/x-r", "factorial");
+                Object fn = global.Polyglot().eval("text/x-r", "factorial");
                 r = global.cast(fn, (Computation) null);
             }
             return (Number) r.compute(n);
@@ -256,7 +278,7 @@ public class Services {
                     "  f.to_s\n" +
                     "end\n" +
                     "method(:fac)";
-                Object fn = global.Interop().eval("application/x-ruby", rubyCode);
+                Object fn = global.Polyglot().eval("application/x-ruby", rubyCode);
                 ruby = global.cast(fn, (Computation) null);
             }
             return (String) ruby.compute(n);
