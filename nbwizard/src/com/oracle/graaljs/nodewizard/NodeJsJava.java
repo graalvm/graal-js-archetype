@@ -194,9 +194,10 @@ public class NodeJsJava {
             nodeFile.getPath(),
             "--polyglot",
             "--use-classpath-env-var",
+            "--experimental-worker",
             "--jvm",
             "-e",
-            "print(typeof Java === 'object' && typeof Java.Worker);"
+            "print(typeof Java === 'object' && typeof require('worker_threads'));"
         );
         b.redirectErrorStream(true);
         Process p = b.start();
