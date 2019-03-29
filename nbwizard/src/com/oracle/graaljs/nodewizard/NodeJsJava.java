@@ -142,7 +142,7 @@ public class NodeJsJava {
         if ("summary".equals(model.getCurrent())) {
             return;
         }
-        final URL url = new URL("http://www.oracle.com/technetwork/oracle-labs/program-languages/");
+        final URL url = new URL("http://www.graalvm.org/");
         URLDisplayer.getDefault().showURL(url);
     }
 
