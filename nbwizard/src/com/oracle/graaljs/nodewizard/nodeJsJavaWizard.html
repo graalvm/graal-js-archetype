@@ -195,10 +195,13 @@
             Please, fill in the input field!
         </div>
         <div data-bind="visible: errorCode() === 3" class="error">
-            GraalVM at <code><span data-bind="text: graalvmPath"></span>/bin/node</code> doesn't support <code>Java.Worker</code>!
+            GraalVM at <code><span data-bind="text: graalvmPath"></span>/bin/node</code> doesn't support experimental workers!
         </div>
         <div data-bind="visible: errorCode() === 4" class="error">
             Checking GraalVM at <code><span data-bind="text: graalvmPath"></span>/bin/node</code> version...
+        </div>
+        <div data-bind="visible: errorCode() === 5" class="error">
+            GraalVM at <code><span data-bind="text: graalvmPath"></span>/bin/node</code> doesn't support Java interop!
         </div>
 
 </body>
