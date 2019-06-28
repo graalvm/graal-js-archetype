@@ -63,7 +63,6 @@ import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 import net.java.html.BrwsrCtx;
 import net.java.html.boot.script.Scripts;
-import net.java.html.js.JavaScriptBody;
 import net.java.html.json.ComputedProperty;
 import net.java.html.json.Function;
 import net.java.html.json.Model;
@@ -213,8 +212,8 @@ public class NodeJsJava {
         ProcessBuilder b = new ProcessBuilder(
             nodeFile.getPath(),
             "--polyglot",
-            "--experimental-worker",
             "--use-classpath-env-var",
+            "--experimental-worker",
             "--jvm",
             "-e",
             "console.log({"
