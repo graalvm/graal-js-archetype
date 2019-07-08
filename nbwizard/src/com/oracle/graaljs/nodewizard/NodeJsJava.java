@@ -236,7 +236,7 @@ public class NodeJsJava {
             p.waitFor(100, TimeUnit.MILLISECONDS);
         }
         Status status;
-        final Fn.Presenter presenter = Scripts.newPresenter().sanitize(true).build();
+        final Fn.Presenter presenter = Scripts.createPresenter();
         Contexts.Builder contextBuilder = Contexts.newBuilder("xhr4j");
         contextBuilder.register(Fn.Presenter.class, presenter, 10);
         Contexts.fillInByProviders(NodeJsJava.class, contextBuilder);
