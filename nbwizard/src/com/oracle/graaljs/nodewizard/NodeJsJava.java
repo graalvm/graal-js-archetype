@@ -42,6 +42,8 @@ package com.oracle.graaljs.nodewizard;
 
 import com.oracle.graaljs.nodewizard.NodeJsJava.ServerCode;
 import java.awt.EventQueue;
+import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -50,6 +52,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Executors;
@@ -58,9 +61,12 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
+import net.java.html.BrwsrCtx;
+import net.java.html.boot.script.Scripts;
 import net.java.html.json.ComputedProperty;
 import net.java.html.json.Function;
 import net.java.html.json.Model;
+import net.java.html.json.Models;
 import net.java.html.json.OnPropertyChange;
 import net.java.html.json.OnReceive;
 import net.java.html.json.Property;
@@ -68,6 +74,8 @@ import org.netbeans.api.java.platform.JavaPlatform;
 import org.netbeans.api.java.platform.JavaPlatformManager;
 import org.netbeans.api.java.platform.PlatformsCustomizer;
 import org.netbeans.api.templates.TemplateRegistration;
+import org.netbeans.html.boot.spi.Fn;
+import org.netbeans.html.context.spi.Contexts;
 import org.openide.awt.HtmlBrowser.URLDisplayer;
 import org.openide.filesystems.FileObject;
 import org.openide.util.Exceptions;
@@ -84,7 +92,7 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "algR", type = boolean.class),
     @Property(name = "unitTesting", type = boolean.class),
     @Property(name = "graalvmPath", type = String.class),
-    @Property(name = "graalvmCheck", type = String.class),
+    @Property(name = "graalvmCheck", type = Status.class),
     @Property(name = "archetypeVersions", type = String.class, array = true),
     @Property(name = "archetypeVersion", type = String.class),
 })
@@ -142,19 +150,22 @@ public class NodeJsJava {
         if ("summary".equals(model.getCurrent())) {
             return;
         }
-        final URL url = new URL("http://www.oracle.com/technetwork/oracle-labs/program-languages/");
+        final URL url = new URL("http://www.graalvm.org/");
         URLDisplayer.getDefault().showURL(url);
     }
 
     @ComputedProperty
-    static int errorCode(String graalvmPath, String graalvmCheck) {
+    static int errorCode(String graalvmPath, Status graalvmCheck) {
         if (graalvmPath == null || !new File(new File(new File(graalvmPath), "bin"), "node").exists()) {
             return 1;
         }
-        if ("pending".equals(graalvmCheck)) {
+        if (graalvmCheck == null) {
             return 4;
         }
-        if (!"function".equals(graalvmCheck)) {
+        if (!"object".equals(graalvmCheck.getJava())) {
+            return 5;
+        }
+        if (!"object".equals(graalvmCheck.getWorker_threads())) {
             return 3;
         }
         return 0;
@@ -162,17 +173,17 @@ public class NodeJsJava {
 
     @OnPropertyChange("graalvmPath")
     void checkGraalVM(NodeJsJavaModel model) {
-        model.setGraalvmCheck("pending");
+        model.setGraalvmCheck(null);
         ScheduledFuture<?> previous = graalVMCheck;
         if (previous != null) {
             previous.cancel(true);
         }
         graalVMCheck = background().schedule(() -> {
-            String status;
+            Status status;
             try {
                 status = testGraalVMVersion(model.getGraalvmPath());
             } catch (IOException | InterruptedException ex) {
-                status = ex.getMessage();
+                status = new Status().withLauncher(ex.getMessage());
             }
             model.setGraalvmCheck(status);
         }, 1, TimeUnit.SECONDS);
@@ -185,10 +196,18 @@ public class NodeJsJava {
         return background;
     }
 
-    static String testGraalVMVersion(String path) throws IOException, InterruptedException {
+    @Model(className = "Status", builder = "with", properties = {
+        @Property(name = "launcher", type = String.class),
+        @Property(name = "java", type = String.class),
+        @Property(name = "worker_threads", type = String.class),
+    })
+    static class StatusCntrl {
+    }
+
+    static Status testGraalVMVersion(String path) throws IOException, InterruptedException {
         File nodeFile = new File(new File(new File(path), "bin"), "node");
         if (!nodeFile.isFile()) {
-            return nodeFile + " not found";
+            return new Status().withLauncher(nodeFile + " not found");
         }
         ProcessBuilder b = new ProcessBuilder(
             nodeFile.getPath(),
@@ -197,7 +216,11 @@ public class NodeJsJava {
             "--experimental-worker",
             "--jvm",
             "-e",
-            "print(typeof Java === 'object' && typeof require('worker_threads'));"
+            "console.log({"
+          + "  'launcher' : null,"
+          + "  'java' : typeof Java,"
+          + "  'worker_threads' : typeof require('worker_threads')"
+          + "});"
         );
         b.redirectErrorStream(true);
         Process p = b.start();
@@ -212,7 +235,17 @@ public class NodeJsJava {
             sb.append(new String(arr, 0, len, "UTF-8"));
             p.waitFor(100, TimeUnit.MILLISECONDS);
         }
-        return sb.toString().trim();
+        Status status;
+        final Fn.Presenter presenter = Scripts.newPresenter().sanitize(true).build();
+        Contexts.Builder contextBuilder = Contexts.newBuilder("xhr4j");
+        contextBuilder.register(Fn.Presenter.class, presenter, 10);
+        Contexts.fillInByProviders(NodeJsJava.class, contextBuilder);
+        BrwsrCtx ctx = contextBuilder.build();
+        try (Closeable c = Fn.activate(presenter)) {
+            String out = sb.toString().trim();
+            status = Models.parse(ctx, Status.class, new ByteArrayInputStream(out.getBytes(StandardCharsets.UTF_8)));
+        }
+        return status;
     }
 
     @ComputedProperty
