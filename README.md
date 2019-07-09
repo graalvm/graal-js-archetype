@@ -12,7 +12,7 @@ with a compeling **polyglot** story and offers language independent access to
 various industry standard frameworks (like [node.js](http://nodejs.org) project)
 and smooth integration of these languages in/with **Java**, it provides no *best advices*
 or 'getting started' guidelines. It is up to individual users of 
-[GraalVM](http://www.oracle.com/technetwork/oracle-labs/program-languages/) to figure
+[GraalVM](http://graalvm.org) to figure
 everything out by themselves. Given the obstacles of multi language interop and the
 fact that it is unique (e.g. not documented on [StackOverflow](http://stackoverflow.com)),
 it is hard or even close to impossible to get started.
@@ -20,7 +20,7 @@ it is hard or even close to impossible to get started.
 The **Node.js+Java Maven Archetype** is here to change that. It gives you an
 easy way to create a working [Maven](http://maven.apache.org) project with
 selected examples that can be edited, compiled, debugged and unit tested in
-the context of [GraalVM](http://www.oracle.com/technetwork/oracle-labs/program-languages/)'s
+the context of [GraalVM](http://graalvm.org)'s
 [node.js](http://nodejs.org) environment.
 
 ## Getting Started
@@ -35,9 +35,9 @@ line interaction for [Maven](http://maven.apache.org) newbies):
 ```bash
 $ mvn -DarchetypeGroupId=com.oracle.graal-js \
       -DarchetypeArtifactId=nodejs-archetype \
-      -DarchetypeVersion=0.1 \
+      -DarchetypeVersion=0.2 \
       archetype:generate \
-      -DgraalvmPath=$HOME/bin/graalvm-0.29/
+      -DgraalvmPath=/graalvm-19.0.2/
 # and optionaly any of these
       -DalgorithmJava=true \
       -DalgorithmJS=true \
@@ -68,6 +68,10 @@ $ curl http://localhost:8080/java/30
 265252859812191058636308480000000
 $ curl http://localhost:8080/js/10
 3628800
+```
+In case you enabled [Ruby](https://github.com/oracle/truffleruby) or
+[R language](https://github.com/oracle/fastr) you can also try:
+```bash
 $ curl http://localhost:8080/ruby/100
 Received: /ruby/100
 $ curl http://localhost:8080/r/5
@@ -79,7 +83,7 @@ accessible via your standard **Java** development tooling.
 ## The Benefits of Polyglot
 
 The generated samples are simple, yet powerful enough to demonstrate the benefits of
-**polyglot** runtime like [GraalVM](http://www.oracle.com/technetwork/oracle-labs/program-languages/)
+**polyglot** runtime like [GraalVM](http://graalvm.org)
 over standard, single language runtimes.
 
 ### Using Better Arithmetic
@@ -108,13 +112,13 @@ a look at **R** language implementation of factorial - it calls just a single
 function (called **factorial** obviously). Of course, it is not hard to
 write factorial in any language, but for certian type of tasks there are more
 suitable libraries in different languages than one is using primarily.
-[GraalVM](http://www.oracle.com/technetwork/oracle-labs/program-languages/) let's
+[GraalVM](http://graalvm.org) let's
 you merge them at full speed.
 
 ### Multithreadedness of Java
 
 The Java factorial example shows another benefit of using
-[GraalVM](http://www.oracle.com/technetwork/oracle-labs/program-languages/) -
+[GraalVM](http://graalvm.org) -
 **Java** is inherently multi-threaded system. As such it is possible to
 execute compilation outside of main [node.js](http://nodejs.org) event loop
 leaving it free for other computations. Try some long running computation in
@@ -150,7 +154,7 @@ $ mvn -DarchetypeCatalog=local \
       -DarchetypeArtifactId=nodejs-archetype \
       -DarchetypeVersion=1.0-SNAPSHOT \
       archetype:generate \
-      -DgraalvmPath=$HOME/bin/graalvm-0.29/
+      -DgraalvmPath=/graalvm-19.0.2/
 ```
 
 Make your modifications in `archetype/src/main/resources/` directory. It
