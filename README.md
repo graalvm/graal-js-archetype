@@ -7,7 +7,7 @@ testing harness and various Maven aware IDEs as a user interface to
 access these tools. Changing this workflow is hard, often impossible and
 contributes to the rigid stability of many enterprise level projects.
 
-While [GraalVM](http://www.oracle.com/technetwork/oracle-labs/program-languages/) comes
+While [GraalVM](http://graalvm.org/) comes
 with a compeling **polyglot** story and offers language independent access to
 various industry standard frameworks (like [node.js](http://nodejs.org) project)
 and smooth integration of these languages in/with **Java**, it provides no *best advices*
