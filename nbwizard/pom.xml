@@ -54,6 +54,14 @@
                     <outputDirectory>${project.build.directory}/classes/com/oracle/graaljs/nodewizard/</outputDirectory>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>3.0</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <repositories>
