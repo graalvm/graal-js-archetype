@@ -115,9 +115,14 @@ public class NodeJsJava {
         findGraalVM(data);
         data.setUnitTesting(true);
         data.setServerCode(ServerCode.js);
-        final String localVersion = findArchetypeVersion();
-        data.setArchetypeVersion(localVersion);
-        data.getArchetypeVersions().add(localVersion);
+        String localVersion;
+        try {
+            localVersion = findArchetypeVersion();
+            data.setArchetypeVersion(localVersion);
+            data.getArchetypeVersions().add(localVersion);
+        } catch (IOException ex) {
+            data.setMsg(ex.getLocalizedMessage());
+        }
         data.searchArtifact("com.oracle.graal-js", "nodejs-archetype");
         return data;
     }
@@ -369,7 +374,8 @@ public class NodeJsJava {
 
     static String findArchetypeVersion() throws IOException {
         try (
-            JarInputStream jar = new JarInputStream(NodeJsJavaModel.class.getResourceAsStream(ARCH_JAR_NAME));
+            final InputStream is = NodeJsJavaModel.class.getResourceAsStream(ARCH_JAR_NAME);
+            final JarInputStream jar = new JarInputStream(ioIfNull(is));
         ) {
             for (;;) {
                 ZipEntry entry = jar.getNextEntry();
@@ -396,6 +402,13 @@ public class NodeJsJava {
             }
             os.write(arr, 0, len);
         }
+    }
+    
+    private static InputStream ioIfNull(InputStream is) throws IOException {
+        if (is == null) {
+            throw new FileNotFoundException("Cannot find bundled archetype");
+        }
+        return is;
     }
 
     enum ServerCode {
