@@ -41,7 +41,7 @@
 /* global Java, Polyglot.*/
 
 if (typeof Java === 'undefined') {
-    throw 'Use GraalVM 1.0-RC11 or newer with enabled --jvm interop!';
+    throw 'Use GraalVM has to support JVM interop!';
 }
 if (typeof Polyglot === 'undefined') {
     throw new 'GraalVM has to define Polyglot global symbol!';
