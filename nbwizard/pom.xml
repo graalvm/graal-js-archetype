@@ -34,6 +34,26 @@
                     <useDefaultManifestFile>true</useDefaultManifestFile>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>local-archetype-copy</id>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifact>${project.groupId}:nodejs-archetype:${project.version}</artifact>
+                    <stripVersion>true</stripVersion>
+                    <stripClassifier>true</stripClassifier>
+                    <outputDirectory>${project.build.directory}/classes/com/oracle/graaljs/nodewizard/</outputDirectory>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <repositories>

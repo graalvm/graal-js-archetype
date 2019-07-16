@@ -110,45 +110,6 @@
                     <excludes>
                     </excludes>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <id>license-check-project-files</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <mapping>
-                                <archetype>SCRIPT_STYLE</archetype>
-                            </mapping>
-                            <excludes>
-                                <exclude>.*/**</exclude>
-                                <exclude>**/src/main/resources/archetype-resources/**</exclude>
-                                <exclude>nbwizard/**/private/**</exclude>
-                                <exclude>nbwizard/build/**</exclude>
-                                <exclude>nbwizard/manifest.mf</exclude>
-                            </excludes>
-                            <basedir>..</basedir>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <phase>validate</phase>
-                        <id>license-check-archetype-files</id>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <mapping>
-                                <js>SHARPSTAR_STYLE</js>
-                                <java>SHARPSTAR_STYLE</java>
-                                <xml>SHARPSTAR_STYLE</xml>
-                            </mapping>
-                            <includes>
-                                <include>src/main/resources/archetype-resources/**</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
