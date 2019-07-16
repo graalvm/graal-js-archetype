@@ -83,9 +83,10 @@ public class NodeJsJavaTest extends NbTestCase {
         assertTrue("Directory: " + jreHome, jreHome.isDirectory());
         File jdkHome = jreHome.getParentFile();
         Status status = NodeJsJava.testGraalVMVersion(jdkHome.getPath());
-        assertNull("Good GraalVM has launcher", status.getLauncher());
-        assertEquals("Good GraalVM has Java", "object", status.getJava());
-        assertEquals("Good GraalVM has workers", "object", status.getWorker_threads());
+        String prefix = "Good GraalVM at " + jdkHome + " has ";
+        assertNull(prefix + "launcher", status.getLauncher());
+        assertEquals(prefix + "Java", "object", status.getJava());
+        assertEquals(prefix + "workers", "object", status.getWorker_threads());
     }
 
     private void assertOneFile(File home, String ext) throws IOException {

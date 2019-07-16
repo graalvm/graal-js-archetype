@@ -89,6 +89,13 @@
             <type>jar</type>
         </dependency>
         <dependency>
+            <groupId>org.netbeans.html</groupId>
+            <artifactId>xhr4j</artifactId>
+            <version>1.6.1</version>
+            <scope>runtime</scope>
+            <type>jar</type>
+        </dependency>
+        <dependency>
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-openide-util</artifactId>
             <version>RELEASE110</version>
