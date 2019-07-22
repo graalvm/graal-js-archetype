@@ -99,17 +99,26 @@
                 <div>
                     <label class="checkbox-label">
                         <input id="algJS" type="checkbox" data-bind="checked: algJS"/>
-                        <label for="algJS">Simple JavaScript factorial invoked from Java</label>
+                        <label for="algJS" data-bind="visible: labelJS">Simple JavaScript factorial invoked from Java</label>
+                        <span data-bind="visible: missingLanguage() == 'js'">
+                            Missing support. <a href="#" data-bind="click: installLanguage">Download &amp; install</a>?
+                        </span>
                 </div>
                 <div>
                     <label class="checkbox-label">
                         <input id="algRuby" type="checkbox" data-bind="checked: algRuby"/>
-                        <label for="algRuby">Precise factorial implementation written in Ruby</label>
+                        <label for="algRuby" data-bind="visible: labelRuby">Precise factorial implementation written in Ruby</label>
+                        <span data-bind="visible: missingLanguage() == 'ruby'">
+                            Missing support for Ruby. <a href="#" data-bind="click: installLanguage">Download &amp; install</a>?
+                        </span>
                 </div>
                 <div>
                     <label class="checkbox-label">
                         <input id="algR" type="checkbox" data-bind="checked: algR"/>
-                        <label for="algR">Using R language factorial function</label>
+                        <label for="algR" data-bind="visible: labelR">Using R language factorial function</label>
+                        <span data-bind="visible: missingLanguage() == 'R'">
+                            Missing support for R. <a href="#" data-bind="click: installLanguage">Download &amp; install</a>?.
+                        </span>
                 </div>
                 <p>
                     There is a support for polyglot unit testing in the archetype.

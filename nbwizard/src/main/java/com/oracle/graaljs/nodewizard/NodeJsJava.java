@@ -59,6 +59,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 import net.java.html.BrwsrCtx;
@@ -95,6 +97,7 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "graalvmCheck", type = Status.class),
     @Property(name = "archetypeVersions", type = String.class, array = true),
     @Property(name = "archetypeVersion", type = String.class),
+    @Property(name = "missingLanguage", type = String.class),
     @Property(name = "working", type = boolean.class),
 })
 public class NodeJsJava {
@@ -184,8 +187,8 @@ public class NodeJsJava {
         if (previous != null) {
             previous.cancel(true);
         }
-        model.setWorking(true);
         graalVMCheck = background().schedule(() -> {
+            model.setWorking(true);
             Status status;
             try {
                 status = testGraalVMVersion(model.getGraalvmPath());
@@ -204,9 +207,89 @@ public class NodeJsJava {
         return background;
     }
 
+    @Function
+    void installLanguage(NodeJsJavaModel model) {
+        background().execute(() -> {
+            try {
+                File gu = new File(new File(new File(model.getGraalvmPath()), "bin"), "gu");
+                if (!gu.isFile()) {
+                    model.setGraalvmCheck(new Status().withLauncher(gu + " not found"));
+                }
+                final String lang = model.getMissingLanguage();
+                ProcessBuilder b = new ProcessBuilder(
+                        gu.getPath(),
+                        "install", lang);
+                b.redirectErrorStream(true);
+                b.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+                model.setWorking(true);
+                Process p = b.start();
+                int code = p.waitFor();
+                if (code != 0) {
+                    model.setGraalvmCheck(new Status().withLauncher(gu + " install " + lang + " returned " + code));
+                }
+                model.setWorking(false);
+            } catch (IOException | InterruptedException ex) {
+                Exceptions.printStackTrace(ex);
+            }
+        });
+    }
+
+    @ComputedProperty
+    static boolean labelJS(String missingLanguage) {
+        return !"js".equals(missingLanguage);
+    }
+
+    @ComputedProperty
+    static boolean labelR(String missingLanguage) {
+        return !"R".equals(missingLanguage);
+    }
+
+    @ComputedProperty
+    static boolean labelRuby(String missingLanguage) {
+        return !"ruby".equals(missingLanguage);
+    }
+
+    @OnPropertyChange({ "algJS", "algR", "algRuby" })
+    static void checkLanguageInstalled(NodeJsJavaModel model, String name) {
+        final Status check = model.getGraalvmCheck();
+        if (check == null) {
+            return;
+        }
+        switch (name) {
+            case "algJS":
+                checkLanguageInstalled(model, "js", model::isAlgJS, check::isJs, model::setAlgJS);
+                break;
+            case "algR":
+                checkLanguageInstalled(model, "R", model::isAlgR, check::isR, model::setAlgR);
+                break;
+            case "algRuby":
+                checkLanguageInstalled(model, "ruby", model::isAlgRuby, check::isRuby, model::setAlgRuby);
+                break;
+            default:
+                throw new IllegalStateException(name);
+        }
+    }
+
+    private static void checkLanguageInstalled(
+        NodeJsJavaModel model,
+        String language, Supplier<Boolean> getter, Supplier<Boolean> installed, Consumer<Boolean> setter
+    ) {
+        if (Boolean.TRUE.equals(getter.get())) {
+            if (Boolean.TRUE.equals(installed.get())) {
+                return;
+            }
+            setter.accept(false);
+            model.setMissingLanguage(language);
+        }
+    }
+
     @Model(className = "Status", builder = "with", properties = {
         @Property(name = "launcher", type = String.class),
         @Property(name = "java", type = String.class),
+        @Property(name = "js", type = boolean.class),
+        @Property(name = "ruby", type = boolean.class),
+        @Property(name = "R", type = boolean.class),
+        @Property(name = "python", type = boolean.class),
         @Property(name = "worker_threads", type = String.class),
     })
     static class StatusCntrl {
@@ -224,10 +307,21 @@ public class NodeJsJava {
             "--experimental-worker",
             "--jvm",
             "-e",
-            "console.log({"
-          + "  'launcher' : null,"
-          + "  'java' : typeof Java,"
-          + "  'worker_threads' : typeof require('worker_threads')"
+            "function langCheck(lang) {\n"
+          + "  try {\n"
+          + "    return 42 == Polyglot.eval(lang, '42');\n"
+          + "  } catch (e) {\n"
+          + "    return false;\n"
+          + "  }\n"
+          + "}\n"
+          + "console.log({\n"
+          + "  'launcher' : null,\n"
+          + "  'java' : typeof Java,\n"
+          + "  'js' : langCheck('js'),\n"
+          + "  'ruby' : langCheck('ruby'),\n"
+          + "  'R' : langCheck('R'),\n"
+          + "  'python' : langCheck('python'),\n"
+          + "  'worker_threads' : typeof require('worker_threads')\n"
           + "});"
         );
         b.redirectErrorStream(true);
@@ -406,7 +500,7 @@ public class NodeJsJava {
             os.write(arr, 0, len);
         }
     }
-    
+
     private static InputStream ioIfNull(InputStream is) throws IOException {
         if (is == null) {
             throw new FileNotFoundException("Cannot find bundled archetype");
