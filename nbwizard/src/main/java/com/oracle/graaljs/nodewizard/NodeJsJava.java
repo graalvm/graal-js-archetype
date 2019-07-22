@@ -95,6 +95,7 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "graalvmCheck", type = Status.class),
     @Property(name = "archetypeVersions", type = String.class, array = true),
     @Property(name = "archetypeVersion", type = String.class),
+    @Property(name = "working", type = boolean.class),
 })
 public class NodeJsJava {
     private static final String ARCH_JAR_NAME = "nodejs-archetype.jar";
@@ -183,6 +184,7 @@ public class NodeJsJava {
         if (previous != null) {
             previous.cancel(true);
         }
+        model.setWorking(true);
         graalVMCheck = background().schedule(() -> {
             Status status;
             try {
@@ -191,6 +193,7 @@ public class NodeJsJava {
                 status = new Status().withLauncher(ex.getMessage());
             }
             model.setGraalvmCheck(status);
+            model.setWorking(false);
         }, 1, TimeUnit.SECONDS);
     }
 
