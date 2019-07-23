@@ -57,6 +57,14 @@
   100% { transform: rotate(360deg); }
 }
 
+.error::before {
+    content: "\26A0";
+}
+
+.error {
+    color: crimson;
+}
+
 .output {
   position: fixed;
   width: 98vw;

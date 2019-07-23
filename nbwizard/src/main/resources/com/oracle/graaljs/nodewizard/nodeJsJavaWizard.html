@@ -215,7 +215,7 @@
         </div>
 
         <div class="working" data-bind="visible: working"></div>
-        <div class="output" data-bind="visible: output">
+        <div class="output" hidden data-bind="visible: output">
             <textarea data-bind="text: processOutput"></textarea>
             <button data-bind="click: processStop">Stop &amp; Close</button>
         </div>
