@@ -56,3 +56,35 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.output {
+  position: fixed;
+  width: 98vw;
+  height: 98vh;
+  border-radius: 5%;
+  top: 1vh;
+  left: 1vw;
+  right: 1vw;
+  bottom: 1vh;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 2;
+  cursor: pointer;
+}
+
+.output textarea {
+    width: 94%;
+    height: 60%;
+    background-color: rgb(10, 10, 10);
+    color: greenyellow;
+    margin-left: 3%;
+    margin-right: 3%;
+    margin-top: 10%;
+}
+
+.output button {
+    position: static;
+    bottom: 10px;
+    width: 40%;
+    margin-left: 30%;
+    margin-right: 30%;
+}

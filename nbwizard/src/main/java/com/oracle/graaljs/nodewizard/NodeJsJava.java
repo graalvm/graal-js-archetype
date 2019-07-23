@@ -99,6 +99,8 @@ import org.openide.util.NbBundle.Messages;
     @Property(name = "archetypeVersion", type = String.class),
     @Property(name = "missingLanguage", type = String.class),
     @Property(name = "working", type = boolean.class),
+    @Property(name = "output", type = boolean.class),
+    @Property(name = "processOutput", type = String.class),
 })
 public class NodeJsJava {
     private static final String ARCH_JAR_NAME = "nodejs-archetype.jar";
@@ -141,6 +143,7 @@ public class NodeJsJava {
         }
     }
     private ScheduledFuture<?> graalVMCheck;
+    private Process process;
 
 
     @Function
@@ -188,16 +191,20 @@ public class NodeJsJava {
             previous.cancel(true);
         }
         graalVMCheck = background().schedule(() -> {
-            model.setWorking(true);
-            Status status;
-            try {
-                status = testGraalVMVersion(model.getGraalvmPath());
-            } catch (IOException | InterruptedException ex) {
-                status = new Status().withLauncher(ex.getMessage());
-            }
-            model.setGraalvmCheck(status);
-            model.setWorking(false);
+            checkGraalVMNow(model);
         }, 1, TimeUnit.SECONDS);
+    }
+
+    private void checkGraalVMNow(NodeJsJavaModel model) {
+        model.setWorking(true);
+        Status status;
+        try {
+            status = testGraalVMVersion(model.getGraalvmPath());
+        } catch (IOException | InterruptedException ex) {
+            status = new Status().withLauncher(ex.getMessage());
+        }
+        model.setGraalvmCheck(status);
+        model.setWorking(false);
     }
 
     private ScheduledExecutorService background() {
@@ -220,18 +227,67 @@ public class NodeJsJava {
                         gu.getPath(),
                         "install", lang);
                 b.redirectErrorStream(true);
-                b.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-                model.setWorking(true);
+                model.setOutput(true);
+                model.setProcessOutput("Running " + gu.getPath() + " install " + lang + "\n");
                 Process p = b.start();
-                int code = p.waitFor();
-                if (code != 0) {
-                    model.setGraalvmCheck(new Status().withLauncher(gu + " install " + lang + " returned " + code));
+                process = p;
+                final Appendable output = fillProcessOutput(model);
+                int code;
+                try {
+                    drainProcessStream(p.getInputStream(), output, process);
+                    code = p.waitFor();
+                } finally {
+                    process = null;
                 }
-                model.setWorking(false);
+                if (code != 0) {
+                    output.append("\n\n" + gu + " install " + lang + " finished with code " + code);
+                } else {
+                    model.setMissingLanguage(null);
+                    checkGraalVMNow(model);
+                    selectLanguage(model, lang);
+                    model.setOutput(false);
+                }
             } catch (IOException | InterruptedException ex) {
                 Exceptions.printStackTrace(ex);
             }
         });
+    }
+
+    private static Appendable fillProcessOutput(NodeJsJavaModel model) {
+        return new Appendable() {
+            @Override
+            public Appendable append(CharSequence csq) throws IOException {
+                return append(csq, 0, csq.length());
+            }
+
+            @Override
+            public Appendable append(CharSequence csq, int start, int end) throws IOException {
+                String text = model.getProcessOutput();
+                final CharSequence newText = csq.subSequence(start, end);
+                int backspaceCount = 0;
+                while (backspaceCount < newText.length() && newText.charAt(backspaceCount) == '\b') {
+                    backspaceCount++;
+                }
+                text = text.substring(0, text.length() - backspaceCount);
+                text += newText;
+                model.setProcessOutput(text);
+                return this;
+            }
+
+            @Override
+            public Appendable append(char c) throws IOException {
+                return append(Character.toString(c));
+            }
+        };
+    }
+
+    @Function
+    void processStop(NodeJsJavaModel model) {
+        if (process != null) {
+            process.destroy();
+        } else {
+            model.setOutput(false);
+        }
     }
 
     @ComputedProperty
@@ -264,6 +320,22 @@ public class NodeJsJava {
                 break;
             case "algRuby":
                 checkLanguageInstalled(model, "ruby", model::isAlgRuby, check::isRuby, model::setAlgRuby);
+                break;
+            default:
+                throw new IllegalStateException(name);
+        }
+    }
+
+    static void selectLanguage(NodeJsJavaModel model, String name) {
+        switch (name) {
+            case "js":
+                model.setAlgJS(true);
+                break;
+            case "R":
+                model.setAlgR(true);
+                break;
+            case "ruby":
+                model.setAlgRuby(true);
                 break;
             default:
                 throw new IllegalStateException(name);
@@ -327,16 +399,8 @@ public class NodeJsJava {
         b.redirectErrorStream(true);
         Process p = b.start();
         InputStream is = p.getInputStream();
-        byte[] arr = new byte[128];
         StringBuilder sb = new StringBuilder();
-        for (;;) {
-            int len = is.read(arr);
-            if (len == -1) {
-                break;
-            }
-            sb.append(new String(arr, 0, len, "UTF-8"));
-            p.waitFor(100, TimeUnit.MILLISECONDS);
-        }
+        drainProcessStream(is, sb, p);
         Status status;
         final Fn.Presenter presenter = Scripts.createPresenter();
         Contexts.Builder contextBuilder = Contexts.newBuilder("xhr4j");
@@ -348,6 +412,18 @@ public class NodeJsJava {
             status = Models.parse(ctx, Status.class, new ByteArrayInputStream(out.getBytes(StandardCharsets.UTF_8)));
         }
         return status;
+    }
+
+    private static void drainProcessStream(InputStream is, Appendable sb, Process p) throws IOException, InterruptedException {
+        byte[] arr = new byte[1024];
+        for (;;) {
+            int len = is.read(arr);
+            if (len == -1) {
+                break;
+            }
+            sb.append(new String(arr, 0, len, "UTF-8"));
+            p.waitFor(100, TimeUnit.MILLISECONDS);
+        }
     }
 
     @ComputedProperty
