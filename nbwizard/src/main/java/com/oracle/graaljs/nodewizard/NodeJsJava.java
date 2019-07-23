@@ -216,13 +216,16 @@ public class NodeJsJava {
 
     @Function
     void installLanguage(NodeJsJavaModel model) {
+        final String lang = model.getMissingLanguage();
+        if (lang == null) {
+            return;
+        }
         background().execute(() -> {
             try {
                 File gu = new File(new File(new File(model.getGraalvmPath()), "bin"), "gu");
                 if (!gu.isFile()) {
                     model.setGraalvmCheck(new Status().withLauncher(gu + " not found"));
                 }
-                final String lang = model.getMissingLanguage();
                 ProcessBuilder b = new ProcessBuilder(
                         gu.getPath(),
                         "install", lang);
