@@ -7,5 +7,4 @@ OpenIDE-Module-Requires:
   cnb.org.netbeans.modules.java.kit,
   org.netbeans.api.templates.wizard
 OpenIDE-Module-Recommends: cnb.org.netbeans.modules.web.client.kit
-OpenIDE-Module-Specification-Version: 1.0
 
