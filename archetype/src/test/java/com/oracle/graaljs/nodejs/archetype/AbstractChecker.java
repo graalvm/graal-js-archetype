@@ -529,7 +529,7 @@ public abstract class AbstractChecker {
         StringBuilder sb = new StringBuilder();
 
         try {
-            ProcessBuilder pb = new ProcessBuilder(node.getPath(), "--polyglot", "-e", "print(Polyglot.eval('" + id + "', '42'))");
+            ProcessBuilder pb = new ProcessBuilder(node.getPath(), "--polyglot", "-e", "console.log(Polyglot.eval('" + id + "', '42'))");
             Process p = pb.start();
             p.waitFor(10, TimeUnit.SECONDS);
             readFully(p.getErrorStream(), sb);
