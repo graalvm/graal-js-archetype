@@ -624,6 +624,5 @@ public abstract class AbstractChecker {
         int err = p.waitFor();
         dumpStackOfNode(sb, "Execution of {0} finished with exit code {1}", new Object[]{jps, err});
         assertEquals("Execution OK", 0, err);
-        fail("Dump!");
     }
 }
